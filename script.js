@@ -14,7 +14,8 @@ let accessToken = null;
 let equipos = [];
 let turnoActual = 0;
 let costoPasarCancion = 1;
-let apuestasRivales = {}; // Guarda qué rivales apuestan en contra
+let apuestasRivales = {}; 
+let posicionElegidaActivo = null;
 
 // Elementos del DOM
 const btnPlay = document.getElementById('btn-play');
@@ -22,6 +23,7 @@ const btnReveal = document.getElementById('btn-reveal');
 const btnSkip = document.getElementById('btn-skip');
 const btnStartGame = document.getElementById('btn-start-game');
 const btnResolveTurn = document.getElementById('btn-resolve-turn');
+const btnConfirmActive = document.getElementById('btn-confirm-active');
 const audioPlayer = document.getElementById('audio-player');
 const secretCard = document.getElementById('secret-card');
 const cardTitle = document.getElementById('card-title');
@@ -37,6 +39,8 @@ const selectPlacement = document.getElementById('select-placement');
 const rivalsBetPanel = document.getElementById('rivals-bet-panel');
 const rivalsButtonsContainer = document.getElementById('rivals-buttons-container');
 const teamsBoard = document.getElementById('teams-board');
+const activeTeamBetDiv = document.getElementById('active-team-bet');
+const phaseTitle = document.getElementById('phase-title');
 
 function mostrarPantallaLogin() {
     btnPlay.textContent = "Conectar con Spotify";
@@ -48,7 +52,7 @@ function mostrarPantallaLogin() {
 
 function iniciarJuego() {
     if (btnLogout) btnLogout.style.display = 'block'; 
-    btnPlay.style.display = 'none'; // Ya no se usa como reproductor principal de control inicial
+    btnPlay.style.display = 'none';
     setupSection.style.display = 'flex';
     obtenerCancionesSpotify(); 
 }
@@ -187,7 +191,7 @@ async function obtenerCancionesSpotify() {
 }
 
 // ==========================================================================
-// 5. NUEVA LÓGICA MULTIEQUIPO Y TABLERO
+// 5. GESTIÓN MULTIEQUIPO Y TABLEROS INTERACTIVOS
 // ==========================================================================
 btnStartGame.addEventListener('click', () => {
     const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
@@ -198,14 +202,13 @@ btnStartGame.addEventListener('click', () => {
             id: i,
             nombre: `Equipo ${i}`,
             fichas: 5,
-            lineaTiempo: [] // Array de canciones ordenadas
+            lineaTiempo: [] 
         });
     }
 
     setupSection.style.display = 'none';
     gamePlaySection.style.display = 'flex';
     
-    // Repartir carta inicial obligatoria a cada equipo para arrancar su línea temporal
     equipos.forEach(eq => {
         const indice = Math.floor(Math.random() * cancionesJuego.length);
         const cartaInicial = cancionesJuego.splice(indice, 1)[0];
@@ -216,17 +219,30 @@ btnStartGame.addEventListener('click', () => {
     nuevoTurno();
 });
 
+function modificarFichas(equipoId, cantidad) {
+    const eq = equipos.find(e => e.id === equipoId);
+    if (eq) {
+        eq.fichas += cantidad;
+        if (eq.fichas < 0) eq.fichas = 0;
+        actualizarTableroVisual();
+    }
+}
+
 function actualizarTableroVisual() {
     teamsBoard.innerHTML = '';
     equipos.forEach((eq, index) => {
         const contenedorEq = document.createElement('div');
         contenedorEq.style.cssText = `background: #1e1e1e; padding: 15px; border-radius: 10px; border: 2px solid ${index === turnoActual ? 'var(--accent-color)' : '#333'}`;
         
-        // Cabecera Equipo
         contenedorEq.innerHTML = `
-            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; font-weight:bold;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; font-weight:bold;">
                 <span style="color: ${index === turnoActual ? 'var(--accent-color)' : 'white'}">${eq.nombre} ${index === turnoActual ? '(Jugando)' : ''}</span>
-                <span style="color: #e67e22;">🪙 Fichas: ${eq.fichas}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color: #e67e22; margin-right:5px;">🪙 Fichas: <span id="fichas-val-${eq.id}">${eq.fichas}</span></span>
+                    <!-- BOTONES DE GESTIÓN MANUAL DE FICHAS -->
+                    <button onclick="modificarFichas(${eq.id}, 1)" style="padding:2px 8px; width:auto; background:#2ecc71; font-size:0.8rem;">+1</button>
+                    <button onclick="modificarFichas(${eq.id}, -1)" style="padding:2px 8px; width:auto; background:#e74c3c; font-size:0.8rem;">-1</button>
+                </div>
             </div>
             <div class="timeline-container" id="tl-eq-${eq.id}"></div>
         `;
@@ -234,7 +250,6 @@ function actualizarTableroVisual() {
         teamsBoard.appendChild(contenedorEq);
         const tlContenedor = document.getElementById(`tl-eq-${eq.id}`);
         
-        // Renderizar mini cartas ordenadas por año
         eq.lineaTiempo.sort((a,b) => a.anio - b.anio).forEach(cancion => {
             const miniCarta = document.createElement('div');
             miniCarta.classList.add('timeline-card');
@@ -249,16 +264,22 @@ function actualizarTableroVisual() {
 
 function nuevoTurno() {
     apuestasRivales = {};
+    posicionElegidaActivo = null;
+    
+    phaseTitle.textContent = "Fase de Colocación";
+    activeTeamBetDiv.style.display = 'block';
+    selectPlacement.disabled = false;
+    btnConfirmActive.style.display = 'block';
+    
     rivalsBetPanel.style.display = 'none';
     btnResolveTurn.style.display = 'none';
-    btnReveal.style.display = 'block';
+    btnReveal.style.display = 'none';
     btnSkip.style.display = 'block';
     secretCard.classList.add('hidden');
     
     skipCostSpan.textContent = costoPasarCancion;
     turnIndicator.textContent = `Turno activo: ${equipos[turnoActual].nombre}`;
     
-    // Seleccionar y disparar audio de la canción misteriosa
     const indiceAleatorio = Math.floor(Math.random() * cancionesJuego.length);
     cancionActual = cancionesJuego.splice(indiceAleatorio, 1)[0];
 
@@ -273,12 +294,10 @@ function nuevoTurno() {
     actualizarTableroVisual();
 }
 
-// Calcula los "huecos" disponibles en la línea temporal para poder apostar
 function prepararSelectorEspacios() {
     selectPlacement.innerHTML = '';
     const lt = equipos[turnoActual].lineaTiempo;
     
-    // Opción única si no hay cartas, o extremos
     const opAntes = document.createElement('option');
     opAntes.value = "0";
     opAntes.textContent = `Antes de ${lt[0].anio}`;
@@ -300,10 +319,9 @@ function prepararSelectorEspacios() {
 }
 
 // ==========================================================================
-// 6. CONTROLADORES DE ACCIONES Y APUESTAS
+// 6. CONTROLADORES DE ACCIONES Y APUESTAS (NUEVO FLUJO)
 // ==========================================================================
 
-// Pasar canción progresivo
 btnSkip.addEventListener('click', () => {
     const eq = equipos[turnoActual];
     if (eq.fichas < costoPasarCancion) {
@@ -311,46 +329,54 @@ btnSkip.addEventListener('click', () => {
         return;
     }
     eq.fichas -= costoPasarCancion;
-    costoPasarCancion++; // Sube para el siguiente intento
+    costoPasarCancion++; 
     audioPlayer.pause();
     nuevoTurno();
 });
 
-// Revelar carta y abrir apuestas de rivales
-btnReveal.addEventListener('click', () => {
-    audioPlayer.pause();
-    secretCard.classList.remove('hidden');
-    btnReveal.style.display = 'none';
+// Paso 1: Confirmar acción del activo y congelar la opción para los rivales
+btnConfirmActive.addEventListener('click', () => {
+    posicionElegidaActivo = parseInt(selectPlacement.value);
+    selectPlacement.disabled = true;
+    btnConfirmActive.style.display = 'none';
     btnSkip.style.display = 'none';
     
-    // Construir dinámicamente apuestas para los rivales
+    phaseTitle.textContent = "Turno de Robo de los Rivales";
+    
+    // Renderizar selectores de robo excluyendo la opción ya pisada
     rivalsButtonsContainer.innerHTML = '';
+    let algunRivalConFichas = false;
+
     equipos.forEach((eq, index) => {
         if(index !== turnoActual && eq.fichas > 0) {
+            algunRivalConFichas = true;
             const divRival = document.createElement('div');
-            divRival.style.cssText = "display:flex; gap:10px; align-items:center; background:#252525; padding:5px; border-radius:5px;";
+            divRival.style.cssText = "display:flex; gap:10px; align-items:center; background:#252525; padding:8px; border-radius:5px; margin-bottom:5px;";
             
-            // Selector de espacio para el rival
             const selRival = document.createElement('select');
             selRival.id = `select-rival-${eq.id}`;
-            selRival.style.cssText = "padding:5px; background:#444; color:white; border:none; border-radius:3px;";
+            selRival.style.cssText = "padding:5px; background:#444; color:white; border:none; border-radius:3px; flex-grow:1;";
             
-            // Duplicamos opciones del selector principal para el robo
+            // Duplicar opciones omitiendo la del jugador activo
             Array.from(selectPlacement.options).forEach(opt => {
-                const clone = opt.cloneNode(true);
-                selRival.appendChild(clone);
+                if (parseInt(opt.value) !== posicionElegidaActivo) {
+                    const clone = opt.cloneNode(true);
+                    selRival.appendChild(clone);
+                }
             });
 
-            divRival.innerHTML = `<span>${eq.nombre}:</span>`;
+            divRival.innerHTML = `<span style="font-size:0.9rem; min-width:80px;">${eq.nombre}:</span>`;
             
             const btnRobar = document.createElement('button');
             btnRobar.textContent = "Apostar Robo (1 🪙)";
-            btnRobar.style.cssText = "padding:5px 10px; font-size:0.8rem; width:auto; background:#ff0080; color:white;";
+            btnRobar.style.cssText = "padding:5px 10px; font-size:0.8rem; width:auto; background:#ff0080; color:white; border:none; border-radius:3px;";
             
             btnRobar.onclick = () => {
                 apuestasRivales[eq.id] = parseInt(selRival.value);
-                btnRobar.textContent = "💥 ¡Apuesta Registrada!";
+                btnRobar.textContent = "💥 ¡Fijado!";
+                btnRobar.style.background = "#555";
                 btnRobar.disabled = true;
+                selRival.disabled = true;
             };
 
             divRival.appendChild(selRival);
@@ -360,47 +386,41 @@ btnReveal.addEventListener('click', () => {
     });
 
     rivalsBetPanel.style.display = 'block';
-    btnResolveTurn.style.display = 'block';
+    btnReveal.style.display = 'block'; // Pasamos el control al botón para desvelar la carta
 });
 
-// Resolver el turno completo
-btnResolveTurn.addEventListener('click', () => {
-    const eqActivo = equipos[turnoActual];
-    const anioCorrecto = cancionActual.anio;
-    const posicionElegida = parseInt(selectPlacement.value);
+// Paso 2: Mostrar la solución real
+btnReveal.addEventListener('click', () => {
+    audioPlayer.pause();
+    secretCard.classList.remove('hidden');
+    btnReveal.style.display = 'none';
+    rivalsBetPanel.style.display = 'none';
+    activeTeamBetDiv.style.display = 'none';
     
-    // Clonamos y añadimos la carta temporalmente para validar posición exacta
+    phaseTitle.textContent = "Resultados del Turno";
+    
+    // Calcular el índice real correcto
+    const eqActivo = equipos[turnoActual];
     let copiaLinea = [...eqActivo.lineaTiempo];
     copiaLinea.push(cancionActual);
     copiaLinea.sort((a,b) => a.anio - b.anio);
     const indiceCorrectoReal = copiaLinea.indexOf(cancionActual);
 
-    let activoHaAcertado = (posicionElegida === indiceCorrectoReal);
+    // Procesar Matemáticas automáticas de las líneas de tiempo
+    let activoHaAcertado = (posicionElegidaActivo === indiceCorrectoReal);
 
-    // 1. Resolver apuestas secundarias del jugador activo (artista / titulo)
-    if(document.getElementById('check-artist').checked) {
-        // En un juego real esto requerirá juicio de los contrincantes, simulamos acierto/fallo automático para agilizar
-        const aciertoArt = confirm(`¿El ${eqActivo.nombre} dijo correctamente el artista: ${cancionActual.artista}?`);
-        eqActivo.fichas += aciertoArt ? 1 : -1;
-    }
-    if(document.getElementById('check-title').checked) {
-        const aciertoTit = confirm(`¿El ${eqActivo.nombre} dijo correctamente el título: ${cancionActual.titulo}?`);
-        eqActivo.fichas += aciertoTit ? 1 : -1;
-    }
-
-    // 2. Resolver posición del jugador activo
     if (activoHaAcertado) {
-        alert(`¡${eqActivo.nombre} acertó el año! La canción se añade a su línea.`);
+        alert(`¡${eqActivo.nombre} acertó la posición cronológica! La canción se suma a su mazo.`);
         eqActivo.lineaTiempo.push(cancionActual);
     } else {
-        alert(`¡${eqActivo.nombre} falló! El año correcto era ${anioCorrecto}.`);
+        alert(`¡${eqActivo.nombre} falló la cronología! El año era ${cancionActual.anio}.`);
     }
 
-    // 3. Resolver robos de los rivales
+    // Procesar robos automáticos de los rivales
     equipos.forEach(eq => {
         if(apuestasRivales[eq.id] !== undefined) {
             if(apuestasRivales[eq.id] === indiceCorrectoReal) {
-                alert(`🎉 ¡${eq.nombre} robó el punto con éxito! Gana la carta y 1 ficha.`);
+                alert(`🎉 ¡${eq.nombre} ejecutó un robo perfecto! Se queda la carta y gana 1 ficha.`);
                 eq.lineaTiempo.push(cancionActual);
                 eq.fichas += 1;
             } else {
@@ -410,22 +430,23 @@ btnResolveTurn.addEventListener('click', () => {
         }
     });
 
-    // Resetear checkboxes secundarios
-    document.getElementById('check-artist').checked = false;
-    document.getElementById('check-title').checked = false;
+    actualizarTableroVisual();
+    btnResolveTurn.style.display = 'block';
+    
+    // MENSAJE DE RECUERDO: Ahora los usuarios usan los botones +/- del tablero para evaluar el artista/canción
+    alert("Turno Cronológico resuelto. Si el equipo acertó además el Autor o Título de viva voz, usad los botones (+1 / -1) de los marcadores manualmente antes de continuar.");
+});
 
-    // Control de mínimos de fichas
-    equipos.forEach(e => { if(e.fichas < 0) e.fichas = 0; });
-
-    // Comprobar condición de victoria (10 canciones en línea temporal)
+// Paso 3: Cierre de ciclo y cambio de turno
+btnResolveTurn.addEventListener('click', () => {
+    // Comprobar condición de victoria (10 canciones)
     const ganador = equipos.find(e => e.lineaTiempo.length >= 10);
     if(ganador) {
-        alert(`🏆 ¡FIN DE LA PARTIDA! El ${ganador.nombre} ha ganado el juego con 10 éxitos colocados.`);
+        alert(`🏆 ¡FIN DE LA PARTIDA! El ${ganador.nombre} ha ganado el juego al completar 10 canciones.`);
         window.location.reload();
         return;
     }
 
-    // Pasar turno al siguiente equipo y resetear costos de salto de canción por ronda
     turnoActual = (turnoActual + 1) % equipos.length;
     costoPasarCancion = 1; 
     nuevoTurno();
@@ -446,24 +467,8 @@ function cargarCancionesRespaldo() {
         { titulo: "Macarena", artista: "Los Del Río", anio: 1993, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
         { titulo: "Corazón Partío", artista: "Alejandro Sanz", anio: 1997, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
         { titulo: "Wannabe", artista: "Spice Girls", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
-        { titulo: "La Flaca", artista: "Jarabe de Palo", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
-        { titulo: "Caminando por la vida", artista: "Melendi", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
-        { titulo: "Zapatillas", artista: "El Canto del Loco", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
-        { titulo: "Aserejé", artista: "Las Ketchup", anio: 2002, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
-        { titulo: "Gasolina", artista: "Daddy Yankee", anio: 2004, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
-        { titulo: "Colgando en tus manos", artista: "Carlos Baute ft. Marta Sánchez", anio: 2008, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-        { titulo: "Por la boca vive el pez", artista: "Fito & Fitipaldis", anio: 2006, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-        { titulo: "Bailando", artista: "Enrique Iglesias", anio: 2014, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-        { titulo: "Malamente", artista: "Rosalía", anio: 2018, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-        { titulo: "Todo De Ti", artista: "Rauw Alejandro", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
-        { titulo: "Nochentera", artista: "Vicco", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" }
+        { titulo: "La Flaca", artista: "Jarabe de Palo", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" }
     ];
-    siguienteCancionSimulada();
-}
-
-function siguienteCancionSimulada() {
-    // Redirección de compatibilidad con el sistema antiguo de inicio automático
-    console.log("Banco de datos listo para el multijugador.");
 }
 
 verificarToken();

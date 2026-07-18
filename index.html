@@ -14,7 +14,7 @@
     <main>
         <!-- SECCIÓN DE LOGIN/CONEXIÓN -->
         <section id="player-section">
-            <button id="btn-play">2Conectar con Spotify</button>
+            <button id="btn-play">Conectar con Spotify</button>
             <audio id="audio-player"></audio>
         </section>
 
@@ -39,8 +39,28 @@
                 <button id="btn-skip" style="background-color: #e67e22; color: white;">Pasar Canción (Cuesta <span id="skip-cost">1</span> 🪙)</button>
             </div>
 
+            <!-- PANEL DE APUESTAS (FASE OCULTA) -->
+            <div id="betting-panel" style="background: #1a1a1a; padding: 15px; border-radius: 11px; width: 100%; display: flex; flex-direction: column; gap: 10px;">
+                <h4 id="phase-title" style="color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">Fase de Colocación</h4>
+                
+                <!-- Paso 1: Equipo activo -->
+                <div id="active-team-bet">
+                    <p id="bet-instruction" style="font-size: 0.9rem; margin-bottom: 5px;">Selecciona dónde encaja esta canción en tu línea temporal:</p>
+                    <select id="select-placement" style="width:100%; padding: 10px; border-radius: 5px; background: #333; color: white;"></select>
+                    <button id="btn-confirm-active" style="margin-top: 10px; background-color: var(--accent-color); color: white;">Confirmar Posición</button>
+                </div>
+
+                <!-- Paso 2: Robos de rivales (Se muestra tras confirmar el activo, pero antes de revelar) -->
+                <div id="rivals-bet-panel" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; display: none;">
+                    <p style="font-size: 0.9rem; color: #ff0080; font-weight: bold;">¿Algún equipo rival quiere apostar al robo? (No pueden elegir la opción del jugador activo)</p>
+                    <div id="rivals-buttons-container" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>
+                </div>
+            </div>
+
             <!-- LA CARTA SECRETA -->
             <div id="card-section" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <button id="btn-reveal" style="display: none; background-color: #2ecc71; color: white; margin-bottom: 15px;">👁️ Revelar Respuesta y Validar</button>
+                
                 <div id="secret-card" class="card hidden">
                     <h2 id="card-title">Título de la Canción</h2>
                     <p id="card-artist">Nombre del Artista</p>
@@ -48,36 +68,8 @@
                         <span id="card-year">0000</span>
                     </div>
                 </div>
-                <button id="btn-reveal">Revelar Respuesta</button>
-            </div>
-
-            <!-- PANEL DE APUESTAS -->
-            <div id="betting-panel" style="background: #1a1a1a; padding: 15px; border-radius: 11px; width: 100%; display: flex; flex-direction: column; gap: 10px;">
-                <h4 style="color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">Área de Decisiones</h4>
                 
-                <!-- Fase 1: Equipo del turno coloca en su mapa -->
-                <div id="active-team-bet">
-                    <p style="font-size: 0.9rem; margin-bottom: 5px;">Selecciona dónde encaja esta canción en tu línea temporal:</p>
-                    <select id="select-placement" style="width:100%; padding: 10px; border-radius: 5px; background: #333; color: white;"></select>
-                </div>
-
-                <!-- Apuestas secundarias (Cantante / Título) -->
-                <div style="display: flex; gap: 10px; margin-top: 5px;">
-                    <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="check-artist"> Apostar artista (+1🪙 / -1🪙)
-                    </label>
-                    <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="check-title"> Apostar título (+1🪙 / -1🪙)
-                    </label>
-                </div>
-
-                <!-- Fase 2: Apuestas de los rivales -->
-                <div id="rivals-bet-panel" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; display: none;">
-                    <p style="font-size: 0.9rem; color: #ff0080; font-weight: bold;">¿Algún equipo rival cree que se ha equivocado y quiere robar?</p>
-                    <div id="rivals-buttons-container" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>
-                </div>
-
-                <button id="btn-resolve-turn" style="background-color: var(--text-color); color: black; display: none; margin-top: 10px;">Confirmar y Resolver Turno</button>
+                <button id="btn-resolve-turn" style="background-color: var(--text-color); color: black; display: none; margin-top: 15px; width: 100%;">Terminar Turno y Avanzar</button>
             </div>
 
             <!-- TABLERO DINÁMICO DE LINEAS TEMPORALES POR EQUIPO -->
@@ -91,3 +83,4 @@
 
     <script src="script.js"></script>
 </body>
+</html>
