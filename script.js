@@ -112,16 +112,17 @@ async function iniciarSesionSpotify() {
     const codeVerifier = generarCadenaAleatoria(64);
     const codeChallenge = await generarCodeChallenge(codeVerifier);
     
-    // Guardamos el verifier temporalmente para usarlo tras la redirección
     localStorage.setItem('pkce_code_verifier', codeVerifier);
 
+    // Añadimos &show_dialog=true al final para forzar la pantalla de login de Spotify
     const urlLogin = `https://accounts.spotify.com/authorize?` + 
         `client_id=${CLIENT_ID}` +
         `&response_type=code` +
         `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
         `&scope=${encodeURIComponent(SCOPES)}` +
         `&code_challenge_method=S256` +
-        `&code_challenge=${codeChallenge}`;
+        `&code_challenge=${codeChallenge}` +
+        `&show_dialog=true`;
         
     window.location.href = urlLogin;
 }
@@ -181,6 +182,13 @@ async function obtenerCancionesSpotify() {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         
+        // Si da error 403 (Forbidden), saltamos directamente al respaldo sin lanzar alerta
+        if (respuesta.status === 403) {
+            console.warn("Acceso denegado por restricciones de cuenta (403). Cargando modo desarrollo con lista extendida.");
+            cargarCancionesRespaldo();
+            return;
+        }
+
         if (!respuesta.ok) throw new Error("Error al conectar con Spotify.");
         
         const datos = await respuesta.json();
@@ -194,12 +202,17 @@ async function obtenerCancionesSpotify() {
             }))
             .filter(cancion => cancion.audioUrl !== null);
 
-        console.log(`Cargadas ${cancionesJuego.length} canciones.`);
+        if (cancionesJuego.length === 0) {
+            console.warn("No se encontraron canciones con preview disponible. Cargando respaldo.");
+            cargarCancionesRespaldo();
+            return;
+        }
+
+        console.log(`Cargadas ${cancionesJuego.length} canciones desde Spotify.`);
         siguienteCancion();
         
     } catch (error) {
         console.error(error);
-        alert("Fallo al conectar con Spotify. Cargando lista de respaldo.");
         cargarCancionesRespaldo();
     }
 }
