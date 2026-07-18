@@ -21,6 +21,42 @@ const cardTitle = document.getElementById('card-title');
 const cardArtist = document.getElementById('card-artist');
 const cardYear = document.getElementById('card-year');
 const timeline = document.getElementById('timeline');
+const btnLogout = document.getElementById('btn-logout');
+
+// Funciones de control de la interfaz visual
+function mostrarPantallaLogin() {
+    btnPlay.textContent = "🟢 Conectar con Spotify";
+    btnPlay.onclick = iniciarSesionSpotify;
+    
+    // Ocultamos el botón de cerrar sesión si no hay sesión activa
+    if (btnLogout) btnLogout.style.display = 'none'; 
+    
+    document.getElementById('card-section').style.display = 'none';
+    document.getElementById('timeline-section').style.display = 'none';
+}
+
+function iniciarJuego() {
+    btnPlay.textContent = "▶️ Escuchar Canción";
+    btnPlay.onclick = null; 
+    
+    // Mostramos el botón de cerrar sesión cuando el juego está activo
+    if (btnLogout) btnLogout.style.display = 'block'; 
+    
+    document.getElementById('card-section').style.display = 'flex';
+    document.getElementById('timeline-section').style.display = 'block';
+    
+    obtenerCancionesSpotify(); 
+}
+
+// Nueva función para borrar el rastro de la sesión
+function cerrarSesion() {
+    localStorage.removeItem('spotify_token');
+    localStorage.removeItem('token_expiry');
+    localStorage.removeItem('pkce_code_verifier');
+    
+    // Forzamos la recarga de la página para volver al estado inicial de login
+    window.location.reload();
+}
 
 // ==========================================================================
 // 2. HERRAMIENTAS CRIPTOGRÁFICAS PARA PKCE
@@ -126,24 +162,6 @@ async function intercambiarCodigoPorToken(code) {
     }
 }
 
-function mostrarPantallaLogin() {
-    btnPlay.textContent = "🟢 Conectar con Spotify";
-    btnPlay.onclick = iniciarSesionSpotify;
-    
-    document.getElementById('card-section').style.display = 'none';
-    document.getElementById('timeline-section').style.display = 'none';
-}
-
-function iniciarJuego() {
-    btnPlay.textContent = "▶️ Escuchar Canción";
-    btnPlay.onclick = null; 
-    
-    document.getElementById('card-section').style.display = 'flex';
-    document.getElementById('timeline-section').style.display = 'block';
-    
-    obtenerCancionesSpotify(); 
-}
-
 // ==========================================================================
 // 4. CONEXIÓN CON LA API DE SPOTIFY
 // ==========================================================================
@@ -244,6 +262,11 @@ btnReveal.addEventListener('click', () => {
         btnReveal.textContent = "👁️ Revelar Respuesta";
     }
 });
+
+// Vinculamos el clic del botón de cierre de sesión a su función lógica
+if (btnLogout) {
+    btnLogout.addEventListener('click', cerrarSesion);
+}
 
 function cargarCancionesRespaldo() {
     cancionesJuego = [
