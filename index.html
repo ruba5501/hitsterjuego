@@ -1,39 +1,85 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hitster Digital</title>
-    <link rel="stylesheet" href="style.css">
-</head>
 <body>
+    <header>
+        <h1>Hitster Digital</h1>
+    </header>
 
     <main>
+        <!-- SECCIÓN DE LOGIN/CONEXIÓN -->
         <section id="player-section">
-            <button id="btn-play">Conectar con Spotify</button>
+            <button id="btn-play">1Conectar con Spotify</button>
             <audio id="audio-player"></audio>
         </section>
 
-        <section id="card-section" class="game-section">
-            <div id="secret-card" class="card hidden">
-                <h2 id="card-title">Título de la Canción</h2>
-                <p id="card-artist">Nombre del Artista</p>
-                <div>
-                    <span id="card-year">0000</span>
+        <!-- SECCIÓN CONFIGURACIÓN EQUIPOS -->
+        <section id="setup-section" class="game-section" style="display: none; flex-direction: column; gap: 15px;">
+            <h3>Configuración de la Partida</h3>
+            <label for="num-teams">¿Cuántos equipos van a jugar? (2-4):</label>
+            <input type="number" id="num-teams" min="2" max="4" value="2" style="padding: 10px; border-radius: 5px; width: 100%; text-align: center;">
+            <button id="btn-start-game">Comenzar Partida</button>
+        </section>
+
+        <!-- SECCIÓN DE JUEGO ACTIVA -->
+        <section id="game-play-section" class="game-section" style="display: none; width: 100%; flex-direction: column; gap: 20px;">
+            
+            <!-- MARCADORES GENERALES Y PANEL DE TURNO -->
+            <div id="turn-indicator" style="background: #222; width: 100%; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; border-left: 5px solid var(--accent-color);">
+                Turno del Equipo
+            </div>
+
+            <!-- CONTROLES EXTRA: PASAR CANCIÓN -->
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button id="btn-skip" style="background-color: #e67e22; color: white;">⏭ Pasar Canción (Cuesta <span id="skip-cost">1</span> 🪙)</button>
+            </div>
+
+            <!-- LA CARTA SECRETA -->
+            <div id="card-section" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <div id="secret-card" class="card hidden">
+                    <h2 id="card-title">Título de la Canción</h2>
+                    <p id="card-artist">Nombre del Artista</p>
+                    <div>
+                        <span id="card-year">0000</span>
+                    </div>
                 </div>
+                <button id="btn-reveal">Revelar Respuesta</button>
             </div>
-            <button id="btn-reveal">Revelar Respuesta</button>
+
+            <!-- PANEL DE APUESTAS -->
+            <div id="betting-panel" style="background: #1a1a1a; padding: 15px; border-radius: 11px; width: 100%; display: flex; flex-direction: column; gap: 10px;">
+                <h4 style="color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">Área de Decisiones</h4>
+                
+                <!-- Fase 1: Equipo del turno coloca en su mapa -->
+                <div id="active-team-bet">
+                    <p style="font-size: 0.9rem; margin-bottom: 5px;">Selecciona dónde encaja esta canción en tu línea temporal:</p>
+                    <select id="select-placement" style="width:100%; padding: 10px; border-radius: 5px; background: #333; color: white;"></select>
+                </div>
+
+                <!-- Apuestas secundarias (Cantante / Título) -->
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="check-artist"> Apostar artista (+1🪙 / -1🪙)
+                    </label>
+                    <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="check-title"> Apostar título (+1🪙 / -1🪙)
+                    </label>
+                </div>
+
+                <!-- Fase 2: Apuestas de los rivales -->
+                <div id="rivals-bet-panel" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; display: none;">
+                    <p style="font-size: 0.9rem; color: #ff0080; font-weight: bold;">¿Algún equipo rival cree que se ha equivocado y quiere robar?</p>
+                    <div id="rivals-buttons-container" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>
+                </div>
+
+                <button id="btn-resolve-turn" style="background-color: var(--text-color); color: black; display: none; margin-top: 10px;">Confirmar y Resolver Turno</button>
+            </div>
+
+            <!-- TABLERO DINÁMICO DE LINEAS TEMPORALES POR EQUIPO -->
+            <div id="teams-board" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                <!-- Se generará dinámicamente con JS -->
+            </div>
         </section>
 
-        <section id="timeline-section" class="game-section">
-            <h3>Tu Línea del Tiempo</h3>
-            <div id="timeline" class="timeline-container">
-            </div>
-        </section>
-
-        <button id="btn-logout" class="btn-secondary" style="display: none;">Cerrar Sesión</button>
+        <button id="btn-logout" class="btn-secondary" style="display: none; margin-top: 20px;">Cerrar Sesión</button>
     </main>
 
     <script src="script.js"></script>
 </body>
-</html>
