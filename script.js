@@ -23,25 +23,44 @@ const cardYear = document.getElementById('card-year');
 const timeline = document.getElementById('timeline');
 
 // ==========================================================================
-// 2. SISTEMA DE AUTENTICACIÓN (ADAPTADO A RESPONSE_TYPE=CODE)
+// 2. HERRAMIENTAS CRIPTOGRÁFICAS PARA PKCE
 // ==========================================================================
-function verificarToken() {
-    // 1. Intentamos leer el código de autorización desde los parámetros de la URL (?code=...)
+function generarCadenaAleatoria(longitud) {
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let resultado = '';
+    const valoresAleatorios = new Uint8Array(longitud);
+    window.crypto.getRandomValues(valoresAleatorios);
+    for (let i = 0; i < longitud; i++) {
+        resultado += caracteres[valoresAleatorios[i] % caracteres.length];
+    }
+    return resultado;
+}
+
+async function generarCodeChallenge(codeVerifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// ==========================================================================
+// 3. SISTEMA DE AUTENTICACIÓN (PKCE COMPLETADO)
+// ==========================================================================
+async function verificarToken() {
     const parametrosUrl = new URLSearchParams(window.location.search);
     const codigoRespuesta = parametrosUrl.get('code');
 
     if (codigoRespuesta) {
-        // Limpiamos los parámetros de la URL estéticamente para que no re-autentique al refrescar
+        // Limpiamos la URL inmediatamente para evitar ejecuciones duplicadas
         window.history.replaceState({}, document.title, window.location.pathname);
         
-        accessToken = codigoRespuesta; 
-        localStorage.setItem('spotify_token', accessToken);
-        localStorage.setItem('token_expiry', Date.now() + 3600 * 1000); 
-        iniciarJuego();
+        // Intercambiamos el código por el Token de acceso real
+        await intercambiarCodigoPorToken(codigoRespuesta);
         return;
     }
 
-    // 2. Si no viene en la URL, buscamos si hay una sesión guardada previamente activa
+    // Si no hay código en la URL, comprobamos el almacenamiento local
     const tokenGuardado = localStorage.getItem('spotify_token');
     const expiracion = localStorage.getItem('token_expiry');
     
@@ -53,10 +72,58 @@ function verificarToken() {
     }
 }
 
-function iniciarSesionSpotify() {
-    // Se fuerza la petición usando el parámetro estricto 'code' exigido por los nuevos perfiles de Spotify
-    const urlLogin = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}`;
+async function iniciarSesionSpotify() {
+    const codeVerifier = generarCadenaAleatoria(64);
+    const codeChallenge = await generarCodeChallenge(codeVerifier);
+    
+    // Guardamos el verifier temporalmente para usarlo tras la redirección
+    localStorage.setItem('pkce_code_verifier', codeVerifier);
+
+    const urlLogin = `https://accounts.spotify.com/authorize?` + 
+        `client_id=${CLIENT_ID}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+        `&scope=${encodeURIComponent(SCOPES)}` +
+        `&code_challenge_method=S256` +
+        `&code_challenge=${codeChallenge}`;
+        
     window.location.href = urlLogin;
+}
+
+async function intercambiarCodigoPorToken(code) {
+    const codeVerifier = localStorage.getItem('pkce_code_verifier');
+    const url = 'https://accounts.spotify.com/api/token';
+
+    const cuerpo = new URLSearchParams({
+        client_id: CLIENT_ID,
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: REDIRECT_URI,
+        code_verifier: codeVerifier
+    });
+
+    try {
+        const respuesta = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: cuerpo
+        });
+
+        if (!respuesta.ok) throw new Error("Error en el intercambio de tokens");
+
+        const datos = await respuesta.json();
+        
+        accessToken = datos.access_token;
+        localStorage.setItem('spotify_token', accessToken);
+        localStorage.setItem('token_expiry', Date.now() + (datos.expires_in * 1000));
+        localStorage.removeItem('pkce_code_verifier'); // Limpieza
+        
+        iniciarJuego();
+    } catch (error) {
+        console.error("Fallo al intercambiar el código PKCE:", error);
+        alert("Error de autenticación. Cargando lista de respaldo.");
+        cargarCancionesRespaldo();
+    }
 }
 
 function mostrarPantallaLogin() {
@@ -78,7 +145,7 @@ function iniciarJuego() {
 }
 
 // ==========================================================================
-// 3. CONEXIÓN CON LA API DE SPOTIFY
+// 4. CONEXIÓN CON LA API DE SPOTIFY
 // ==========================================================================
 async function obtenerCancionesSpotify() {
     const url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?fields=items(track(name,artists,album(release_date),preview_url))`;
@@ -112,7 +179,7 @@ async function obtenerCancionesSpotify() {
 }
 
 // ==========================================================================
-// 4. LÓGICA DEL JUEGO
+// 5. LÓGICA DEL JUEGO
 // ==========================================================================
 function siguienteCancion() {
     if (cancionesJuego.length === 0) {
@@ -133,14 +200,11 @@ function siguienteCancion() {
 }
 
 function colocarEnLineaDelTiempo() {
-    // Añadimos la canción actual al histórico y ordenamos cronológicamente
     cancionesColocadas.push(cancionActual);
     cancionesColocadas.sort((a, b) => a.anio - b.anio);
 
-    // Limpiamos el contenedor visual para redibujar en orden correcto
     timeline.innerHTML = '';
 
-    // Renderizamos de nuevo todas las cartas ordenadas
     cancionesColocadas.forEach(cancion => {
         const miniCarta = document.createElement('div');
         miniCarta.classList.add('timeline-card');
@@ -155,7 +219,7 @@ function colocarEnLineaDelTiempo() {
 }
 
 // ==========================================================================
-// 5. EVENTOS DE LOS BOTONES
+// 6. EVENTOS DE LOS BOTONES
 // ==========================================================================
 btnPlay.addEventListener('click', () => {
     if (btnPlay.onclick !== null) return;
