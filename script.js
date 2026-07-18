@@ -49,6 +49,7 @@ function iniciarJuego() {
     if (btnLogout) btnLogout.style.display = 'block'; 
     btnPlay.style.display = 'none';
     setupSection.style.display = 'flex';
+    generarFormularioEquipos();
     obtenerCancionesSpotify(); 
 }
 
@@ -179,31 +180,65 @@ async function obtenerCancionesSpotify() {
     }
 }
 
+// Generar campos de formulario dinámicamente cuando cambie el número de equipos
+document.getElementById('num-teams').addEventListener('input', generarFormularioEquipos);
+
+function generarFormularioEquipos() {
+    const contenedor = document.getElementById('teams-input-container');
+    const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
+    contenedor.innerHTML = '';
+
+    for (let i = 1; i <= totalEquipos; i++) {
+        const divEquipo = document.createElement('div');
+        divEquipo.style.cssText = "display: flex; flex-direction: column; gap: 5px; background: #222; padding: 10px; border-radius: 5px;";
+        divEquipo.innerHTML = `
+            <strong style="color: var(--accent-color);">Equipo ${i}</strong>
+            <input type="text" id="name-team-${i}" value="Equipo ${i}" placeholder="Nombre del Equipo" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
+            <input type="number" id="year-team-${i}" value="${1990 + (i * 5)}" placeholder="Año de su primera canción" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
+        `;
+        contenedor.appendChild(divEquipo);
+    }
+}
+
+// Modificamos el evento de inicio de juego para capturar los años personalizados
 btnStartGame.addEventListener('click', () => {
     const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
+    
+    // Si el usuario no ha visto los inputs (o es la primera carga), los generamos antes de validar
+    if (document.getElementById('teams-input-container').children.length === 0) {
+        generarFormularioEquipos();
+        return; // Detiene el clic para que revisen los campos generados
+    }
+
     equipos = [];
     
     for(let i = 1; i <= totalEquipos; i++) {
+        const nombreInput = document.getElementById(`name-team-${i}`).value.trim() || `Equipo ${i}`;
+        const anioInput = parseInt(document.getElementById(`year-team-${i}`).value) || 2000;
+
+        // Creamos una carta ficticia "Ancla" que solo contiene el año del usuario
+        const cartaInicialPersonalizada = {
+            titulo: "Año Inicial",
+            artista: "Elección del equipo",
+            anio: anioInput,
+            audioUrl: null // No tiene música porque es solo la base de su línea
+        };
+
         equipos.push({
             id: i,
-            nombre: `Equipo ${i}`,
+            nombre: nombreInput,
             fichas: 5,
-            lineaTiempo: [] 
+            lineaTiempo: [cartaInicialPersonalizada] 
         });
     }
 
     setupSection.style.display = 'none';
     gamePlaySection.style.display = 'flex';
-    
-    equipos.forEach(eq => {
-        const indice = Math.floor(Math.random() * cancionesJuego.length);
-        const cartaInicial = cancionesJuego.splice(indice, 1)[0];
-        eq.lineaTiempo.push(cartaInicial);
-    });
 
     actualizarTableroVisual();
     nuevoTurno();
 });
+
 
 function modificarFichas(equipoId, cantidad) {
     const eq = equipos.find(e => e.id === equipoId);
@@ -239,10 +274,18 @@ function actualizarTableroVisual() {
         eq.lineaTiempo.sort((a,b) => a.anio - b.anio).forEach(cancion => {
             const miniCarta = document.createElement('div');
             miniCarta.classList.add('timeline-card');
-            miniCarta.innerHTML = `
-                <div class="title" title="${cancion.titulo}">${cancion.titulo}</div>
-                <div class="year">${cancion.anio}</div>
-            `;
+            
+            if (cancion.audioUrl === null) {
+                miniCarta.innerHTML = `
+                    <div class="year" style="font-size: 1.6rem; margin-top: 12px; font-weight: bold; color: var(--accent-color); text-align: center;">${cancion.anio}</div>
+                `;
+            } else {
+                miniCarta.innerHTML = `
+                    <div class="title" title="${cancion.titulo}">${cancion.titulo}</div>
+                    <div class="artist">${cancion.artista}</div>
+                    <div class="year">${cancion.anio}</div>
+                `;
+            }
             tlContenedor.appendChild(miniCarta);
         });
     });
