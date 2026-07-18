@@ -273,7 +273,7 @@ function actualizarTableroVisual() {
             
             if (cancion.audioUrl === null) {
                 miniCarta.innerHTML = `
-                    <div class="year" style="font-size: 1.8rem; font-weight: bold; color: #ffffff; background: #2a2a2a; padding: 15px 10px; border-radius: 6px; text-align: center; width: 100%; box-sizing: border-box; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                    <div class="year" style="font-size: 1.8rem; font-weight: bold; color: #ffffff; background: #2a2a2a; padding: 15px 10px; border-radius: 6px; text-align: center; width: 100%; max-width: 100%; box-sizing: border-box; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin: 0 auto; display: block;">
                         ${cancion.anio}
                     </div>
                 `;
