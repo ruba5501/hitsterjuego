@@ -387,20 +387,25 @@ btnReveal.addEventListener('click', () => {
     const indiceCorrectoReal = copiaLinea.indexOf(cancionActual);
     
     let activoHaAcertado = esPosicionCorrecta(posicionElegidaActivo, eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
+    let cartaEntregada = false;
 
     if (activoHaAcertado) {
         eqActivo.lineaTiempo.push(cancionActual);
         eqActivo.lineaTiempo.sort((a, b) => a.anio - b.anio); 
+        cartaEntregada = true; 
     }
 
+    // Procesar robos de los rivales
     equipos.forEach(eq => {
         if(apuestasRivales[eq.id] !== undefined) {
             let rivalHaAcertado = esPosicionCorrecta(apuestasRivales[eq.id], eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
             
             if(rivalHaAcertado) {
-                eq.lineaTiempo.push(cancionActual);
-                eq.lineaTiempo.sort((a, b) => a.anio - b.anio); // Mantiene el mazo del rival ordenado
-                eq.fichas += 1; // El robo exitoso otorga una ficha
+                if (!cartaEntregada) {
+                    eq.lineaTiempo.push(cancionActual);
+                    eq.lineaTiempo.sort((a, b) => a.anio - b.anio);
+                    cartaEntregada = true; 
+                }
             } else {
                 eq.fichas -= 1;
             }
