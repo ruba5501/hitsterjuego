@@ -1,6 +1,3 @@
-// ==========================================================================
-// 1. CONFIGURACIÓN Y VARIABLES DE ESTADO
-// ==========================================================================
 const CLIENT_ID = '401aa21001644430a51ac54c4198096b';
 const PLAYLIST_ID = '37i9dQZF1DXcBWIGoNa3Xm';
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
@@ -9,8 +6,6 @@ const SCOPES = 'playlist-read-private playlist-read-collaborative';
 let cancionesJuego = [];
 let cancionActual = null;
 let accessToken = null;
-
-// LÓGICA MULTIEQUIPO Y APUESTAS
 let equipos = [];
 let turnoActual = 0;
 let costoPasarCancion = 1;
@@ -64,9 +59,7 @@ function cerrarSesion() {
     window.location.reload();
 }
 
-// ==========================================================================
-// 2. HERRAMIENTAS CRIPTOGRÁFICAS PARA PKCE
-// ==========================================================================
+// HERRAMIENTAS CRIPTOGRÁFICAS PARA PKCE
 function generarCadenaAleatoria(longitud) {
     const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     let resultado = '';
@@ -86,9 +79,7 @@ async function generarCodeChallenge(codeVerifier) {
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// ==========================================================================
-// 3. SISTEMA DE AUTENTICACIÓN
-// ==========================================================================
+// SISTEMA DE AUTENTICACIÓN
 async function verificarToken() {
     const parametrosUrl = new URLSearchParams(window.location.search);
     const codigoRespuesta = parametrosUrl.get('code');
@@ -162,9 +153,7 @@ async function intercambiarCodigoPorToken(code) {
     }
 }
 
-// ==========================================================================
-// 4. CONEXIÓN CON LA API DE SPOTIFY
-// ==========================================================================
+// CONEXIÓN CON LA API DE SPOTIFY
 async function obtenerCancionesSpotify() {
     const url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?fields=items(track(name,artists,album(release_date),preview_url))`;
     try {
@@ -190,9 +179,6 @@ async function obtenerCancionesSpotify() {
     }
 }
 
-// ==========================================================================
-// 5. GESTIÓN MULTIEQUIPO Y TABLEROS INTERACTIVOS
-// ==========================================================================
 btnStartGame.addEventListener('click', () => {
     const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
     equipos = [];
@@ -318,14 +304,10 @@ function prepararSelectorEspacios() {
     }
 }
 
-// ==========================================================================
-// 6. CONTROLADORES DE ACCIONES Y APUESTAS (NUEVO FLUJO)
-// ==========================================================================
-
+// CONTROLADORES DE ACCIONES Y APUESTAS 
 btnSkip.addEventListener('click', () => {
     const eq = equipos[turnoActual];
     if (eq.fichas < costoPasarCancion) {
-        alert("¡No tienes suficientes fichas para pasar de canción!");
         return;
     }
     eq.fichas -= costoPasarCancion;
@@ -368,12 +350,12 @@ btnConfirmActive.addEventListener('click', () => {
             divRival.innerHTML = `<span style="font-size:0.9rem; min-width:80px;">${eq.nombre}:</span>`;
             
             const btnRobar = document.createElement('button');
-            btnRobar.textContent = "Apostar Robo (1 🪙)";
+            btnRobar.textContent = "Apostar Robo";
             btnRobar.style.cssText = "padding:5px 10px; font-size:0.8rem; width:auto; background:#ff0080; color:white; border:none; border-radius:3px;";
             
             btnRobar.onclick = () => {
                 apuestasRivales[eq.id] = parseInt(selRival.value);
-                btnRobar.textContent = "💥 ¡Fijado!";
+                btnRobar.textContent = "Fijado";
                 btnRobar.style.background = "#555";
                 btnRobar.disabled = true;
                 selRival.disabled = true;
@@ -386,10 +368,9 @@ btnConfirmActive.addEventListener('click', () => {
     });
 
     rivalsBetPanel.style.display = 'block';
-    btnReveal.style.display = 'block'; // Pasamos el control al botón para desvelar la carta
+    btnReveal.style.display = 'block'; 
 });
 
-// Paso 2: Mostrar la solución real
 btnReveal.addEventListener('click', () => {
     audioPlayer.pause();
     secretCard.classList.remove('hidden');
@@ -399,32 +380,28 @@ btnReveal.addEventListener('click', () => {
     
     phaseTitle.textContent = "Resultados del Turno";
     
-    // Calcular el índice real correcto
     const eqActivo = equipos[turnoActual];
     let copiaLinea = [...eqActivo.lineaTiempo];
     copiaLinea.push(cancionActual);
     copiaLinea.sort((a,b) => a.anio - b.anio);
     const indiceCorrectoReal = copiaLinea.indexOf(cancionActual);
-
-    // Procesar Matemáticas automáticas de las líneas de tiempo
-    let activoHaAcertado = (posicionElegidaActivo === indiceCorrectoReal);
+    
+    let activoHaAcertado = esPosicionCorrecta(posicionElegidaActivo, eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
 
     if (activoHaAcertado) {
-        alert(`¡${eqActivo.nombre} acertó la posición cronológica! La canción se suma a su mazo.`);
         eqActivo.lineaTiempo.push(cancionActual);
-    } else {
-        alert(`¡${eqActivo.nombre} falló la cronología! El año era ${cancionActual.anio}.`);
+        eqActivo.lineaTiempo.sort((a, b) => a.anio - b.anio); 
     }
 
-    // Procesar robos automáticos de los rivales
     equipos.forEach(eq => {
         if(apuestasRivales[eq.id] !== undefined) {
-            if(apuestasRivales[eq.id] === indiceCorrectoReal) {
-                alert(`🎉 ¡${eq.nombre} ejecutó un robo perfecto! Se queda la carta y gana 1 ficha.`);
+            let rivalHaAcertado = esPosicionCorrecta(apuestasRivales[eq.id], eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
+            
+            if(rivalHaAcertado) {
                 eq.lineaTiempo.push(cancionActual);
-                eq.fichas += 1;
+                eq.lineaTiempo.sort((a, b) => a.anio - b.anio); // Mantiene el mazo del rival ordenado
+                eq.fichas += 1; // El robo exitoso otorga una ficha
             } else {
-                alert(`❌ ${eq.nombre} falló el robo. Pierde 1 ficha.`);
                 eq.fichas -= 1;
             }
         }
@@ -432,17 +409,23 @@ btnReveal.addEventListener('click', () => {
 
     actualizarTableroVisual();
     btnResolveTurn.style.display = 'block';
-    
-    // MENSAJE DE RECUERDO: Ahora los usuarios usan los botones +/- del tablero para evaluar el artista/canción
-    alert("Turno Cronológico resuelto. Si el equipo acertó además el Autor o Título de viva voz, usad los botones (+1 / -1) de los marcadores manualmente antes de continuar.");
 });
 
-// Paso 3: Cierre de ciclo y cambio de turno
+function esPosicionCorrecta(opcionElegida, lineaDeTiempo, nuevaCancion, indiceReal) {
+    if (opcionElegida === indiceReal) return true;
+
+    const cartaIzquierda = lineaDeTiempo[opcionElegida - 1];
+    const cartaDerecha = lineaDeTiempo[opcionElegida];
+    
+    if (cartaIzquierda && cartaIzquierda.anio === nuevaCancion.anio) return true;
+    if (cartaDerecha && cartaDerecha.anio === nuevaCancion.anio) return true;
+    
+    return false;
+}
+
 btnResolveTurn.addEventListener('click', () => {
-    // Comprobar condición de victoria (10 canciones)
     const ganador = equipos.find(e => e.lineaTiempo.length >= 10);
     if(ganador) {
-        alert(`🏆 ¡FIN DE LA PARTIDA! El ${ganador.nombre} ha ganado el juego al completar 10 canciones.`);
         window.location.reload();
         return;
     }
@@ -458,16 +441,66 @@ if (btnLogout) {
 
 function cargarCancionesRespaldo() {
     cancionesJuego = [
-        { titulo: "Bohemian Rhapsody", artista: "Queen", anio: 1975, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-        { titulo: "Thriller", artista: "Michael Jackson", anio: 1982, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-        { titulo: "Stayin Alive", artista: "Bee Gees", anio: 1977, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-        { titulo: "A Quién Le Importa", artista: "Alaska y Dinarama", anio: 1986, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
-        { titulo: "Devuélveme a mi chica", artista: "Hombres G", anio: 1985, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-        { titulo: "Un Año Más", artista: "Mecano", anio: 1988, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
-        { titulo: "Macarena", artista: "Los Del Río", anio: 1993, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
-        { titulo: "Corazón Partío", artista: "Alejandro Sanz", anio: 1997, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
-        { titulo: "Wannabe", artista: "Spice Girls", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
-        { titulo: "La Flaca", artista: "Jarabe de Palo", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" }
+        { titulo: "Macarena", artista: "Los Del Río", anio: 1993, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+        { titulo: "Corazón Partío", artista: "Alejandro Sanz", anio: 1997, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+        { titulo: "Wannabe", artista: "Spice Girls", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "La Flaca", artista: "Jarabe de Palo", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+        { titulo: "Cuéntame al oído", artista: "La Oreja de Van Gogh", anio: 1998, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "19 días y 500 noches", artista: "Joaquín Sabina", anio: 1999, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Vuela Vuela", artista: "Magneto", anio: 1991, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Mi Tierra", artista: "Gloria Estefan", anio: 1993, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+        { titulo: "Ciega, Sordomuda", artista: "Shakira", anio: 1998, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+        { titulo: "All That She Wants", artista: "Ace of Base", anio: 1992, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+        { titulo: "Aserejé", artista: "Las Ketchup", anio: 2002, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+        { titulo: "Ave María", artista: "David Bisbal", anio: 2002, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+        { titulo: "Zapatillas", artista: "El Canto del Loco", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+        { titulo: "Caminando por la vida", artista: "Melendi", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+        { titulo: "Gasolina", artista: "Daddy Yankee", anio: 2004, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+        { titulo: "Hips Don't Lie", artista: "Shakira", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+        { titulo: "Malo", artista: "Bebe", anio: 2004, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+        { titulo: "Por la boca vive el pez", artista: "Fito & Fitipaldis", anio: 2006, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+        { titulo: "Papito", artista: "Miguel Bosé", anio: 2007, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "Labios Compartidos", artista: "Maná", anio: 2006, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+        { titulo: "Colgando en tus manos", artista: "Carlos Baute y Marta Sánchez", anio: 2008, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "Es por ti", artista: "Juanes", anio: 2002, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Bad Romance", artista: "Lady Gaga", anio: 2009, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Waka Waka (Esto es África)", artista: "Shakira", anio: 2010, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+        { titulo: "Danza Kuduro", artista: "Don Omar", anio: 2010, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+        { titulo: "Bailando", artista: "Enrique Iglesias", anio: 2014, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+        { titulo: "Despacito", artista: "Luis Fonsi ft. Daddy Yankee", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+        { titulo: "Malamente", artista: "Rosalía", anio: 2018, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+        { titulo: "Lo Malo", artista: "Aitana y Ana Guerra", anio: 2018, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+        { titulo: "La Bicicleta", artista: "Carlos Vives y Shakira", anio: 2016, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+        { titulo: "Sofía", artista: "Alvaro Soler", anio: 2016, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+        { titulo: "Shape of You", artista: "Ed Sheeran", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+        { titulo: "Mi Gente", artista: "J Balvin", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+        { titulo: "Con Altura", artista: "Rosalía ft. J Balvin", anio: 2019, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+        { titulo: "Tusa", artista: "KAROL G ft. Nicki Minaj", anio: 2019, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "Alocao", artista: "Omar Montes ft. Bad Gyal", anio: 2019, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+        { titulo: "Hawái", artista: "Maluma", anio: 2020, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "Todo De Ti", artista: "Rauw Alejandro", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Tacones Rojos", artista: "Sebastian Yatra", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Despechá", artista: "Rosalía", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+        { titulo: "Quevedo: Bzrp Music Sessions, Vol. 52", artista: "Bizarrap ft. Quevedo", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+        { titulo: "Shakira: Bzrp Music Sessions, Vol. 53", artista: "Bizarrap ft. Shakira", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+        { titulo: "Nochentera", artista: "Vicco", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+        { titulo: "Lala", artista: "Myke Towers", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+        { titulo: "Columbia", artista: "Quevedo", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+        { titulo: "Zorra", artista: "Nebulossa", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+        { titulo: "Si Antes Te Hubiera Conocido", artista: "KAROL G", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+        { titulo: "Gata Only", artista: "FloyyMenor ft. Cris Mj", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+        { titulo: "Potra Salvaje (Remix)", artista: "Isabel Aaiún ft. Fernando Moreno", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+        { titulo: "Espresso", artista: "Sabrina Carpenter", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+        { titulo: "Die With A Smile", artista: "Bruno Mars & Lady Gaga", anio: 2024, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "Chulo pt.2", artista: "Bad Gyal, Tokischa, Young Miko", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+        { titulo: "Monotonía", artista: "Shakira ft. Ozuna", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "La Bachata", artista: "Manuel Turizo", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Baby Hello", artista: "Rauw Alejandro ft. Bizarrap", dAnio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Solamente Tú", artista: "Pablo Alborán", anio: 2010, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+        { titulo: "Ateo", artista: "C. Tangana ft. Nathy Peluso", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+        { titulo: "Tu Foto", artista: "Ozuna", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+        { titulo: "El Merengue", artista: "Marshmello ft. Manuel Turizo", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+        { titulo: "Clavaíto", artista: "Chanel ft. Abraham Mateo", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" }
     ];
 }
 
