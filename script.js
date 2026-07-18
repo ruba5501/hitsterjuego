@@ -16,6 +16,7 @@ let posicionElegidaActivo = null;
 const btnPlay = document.getElementById('btn-play');
 const btnReveal = document.getElementById('btn-reveal');
 const btnSkip = document.getElementById('btn-skip');
+const btnTogglePause = document.getElementById('btn-toggle-pause'); // Nuevo botón
 const btnStartGame = document.getElementById('btn-start-game');
 const btnResolveTurn = document.getElementById('btn-resolve-turn');
 const btnConfirmActive = document.getElementById('btn-confirm-active');
@@ -200,14 +201,12 @@ function generarFormularioEquipos() {
     }
 }
 
-// Modificamos el evento de inicio de juego para capturar los años personalizados
 btnStartGame.addEventListener('click', () => {
     const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
     
-    // Si el usuario no ha visto los inputs (o es la primera carga), los generamos antes de validar
     if (document.getElementById('teams-input-container').children.length === 0) {
         generarFormularioEquipos();
-        return; // Detiene el clic para que revisen los campos generados
+        return; 
     }
 
     equipos = [];
@@ -216,12 +215,11 @@ btnStartGame.addEventListener('click', () => {
         const nombreInput = document.getElementById(`name-team-${i}`).value.trim() || `Equipo ${i}`;
         const anioInput = parseInt(document.getElementById(`year-team-${i}`).value) || 2000;
 
-        // Creamos una carta ficticia "Ancla" que solo contiene el año del usuario
         const cartaInicialPersonalizada = {
             titulo: "Año Inicial",
             artista: "Elección del equipo",
             anio: anioInput,
-            audioUrl: null // No tiene música porque es solo la base de su línea
+            audioUrl: null
         };
 
         equipos.push({
@@ -238,7 +236,6 @@ btnStartGame.addEventListener('click', () => {
     actualizarTableroVisual();
     nuevoTurno();
 });
-
 
 function modificarFichas(equipoId, cantidad) {
     const eq = equipos.find(e => e.id === equipoId);
@@ -260,7 +257,6 @@ function actualizarTableroVisual() {
                 <span style="color: ${index === turnoActual ? 'var(--accent-color)' : 'white'}">${eq.nombre} ${index === turnoActual ? '(Jugando)' : ''}</span>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="color: #e67e22; margin-right:5px;">🪙 Fichas: <span id="fichas-val-${eq.id}">${eq.fichas}</span></span>
-                    <!-- BOTONES DE GESTIÓN MANUAL DE FICHAS -->
                     <button onclick="modificarFichas(${eq.id}, 1)" style="padding:2px 8px; width:auto; background:#2ecc71; font-size:0.8rem;">+1</button>
                     <button onclick="modificarFichas(${eq.id}, -1)" style="padding:2px 8px; width:auto; background:#e74c3c; font-size:0.8rem;">-1</button>
                 </div>
@@ -277,12 +273,14 @@ function actualizarTableroVisual() {
             
             if (cancion.audioUrl === null) {
                 miniCarta.innerHTML = `
-                    <div class="year" style="font-size: 1.6rem; margin-top: 12px; font-weight: bold; color: var(--accent-color); text-align: center;">${cancion.anio}</div>
+                    <div class="year" style="font-size: 1.8rem; font-weight: bold; color: #ffffff; background: #2a2a2a; padding: 15px 10px; border-radius: 6px; text-align: center; width: 100%; box-sizing: border-box; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                        ${cancion.anio}
+                    </div>
                 `;
             } else {
                 miniCarta.innerHTML = `
-                    <div class="title" title="${cancion.titulo}">${cancion.titulo}</div>
                     <div class="artist">${cancion.artista}</div>
+                    <div class="title" title="${cancion.titulo}">${cancion.titulo}</div>
                     <div class="year">${cancion.anio}</div>
                 `;
             }
@@ -304,6 +302,8 @@ function nuevoTurno() {
     btnResolveTurn.style.display = 'none';
     btnReveal.style.display = 'none';
     btnSkip.style.display = 'block';
+    btnTogglePause.style.display = 'block';
+    btnTogglePause.textContent = "⏸️ Pausar"; // Resetear texto del botón de pausa
     secretCard.classList.add('hidden');
     
     skipCostSpan.textContent = costoPasarCancion;
@@ -347,6 +347,17 @@ function prepararSelectorEspacios() {
     }
 }
 
+// CONTROLADOR DE PAUSA / REANUDACIÓN
+btnTogglePause.addEventListener('click', () => {
+    if (audioPlayer.paused) {
+        audioPlayer.play().catch(() => console.log("Error al reanudar"));
+        btnTogglePause.textContent = "⏸️ Pausar";
+    } else {
+        audioPlayer.pause();
+        btnTogglePause.textContent = "▶️ Reanudar";
+    }
+});
+
 // CONTROLADORES DE ACCIONES Y APUESTAS 
 btnSkip.addEventListener('click', () => {
     const eq = equipos[turnoActual];
@@ -359,16 +370,15 @@ btnSkip.addEventListener('click', () => {
     nuevoTurno();
 });
 
-// Paso 1: Confirmar acción del activo y congelar la opción para los rivales
 btnConfirmActive.addEventListener('click', () => {
     posicionElegidaActivo = parseInt(selectPlacement.value);
     selectPlacement.disabled = true;
     btnConfirmActive.style.display = 'none';
     btnSkip.style.display = 'none';
+    btnTogglePause.style.display = 'none'; // Ocultar control de audio durante apuestas rivales
     
     phaseTitle.textContent = "Turno de Robo de los Rivales";
     
-    // Renderizar selectores de robo excluyendo la opción ya pisada
     rivalsButtonsContainer.innerHTML = '';
     let algunRivalConFichas = false;
 
@@ -382,7 +392,6 @@ btnConfirmActive.addEventListener('click', () => {
             selRival.id = `select-rival-${eq.id}`;
             selRival.style.cssText = "padding:5px; background:#444; color:white; border:none; border-radius:3px; flex-grow:1;";
             
-            // Duplicar opciones omitiendo la del jugador activo
             Array.from(selectPlacement.options).forEach(opt => {
                 if (parseInt(opt.value) !== posicionElegidaActivo) {
                     const clone = opt.cloneNode(true);
@@ -438,7 +447,6 @@ btnReveal.addEventListener('click', () => {
         cartaEntregada = true; 
     }
 
-    // Procesar robos de los rivales
     equipos.forEach(eq => {
         if(apuestasRivales[eq.id] !== undefined) {
             let rivalHaAcertado = esPosicionCorrecta(apuestasRivales[eq.id], eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
@@ -543,12 +551,10 @@ function cargarCancionesRespaldo() {
         { titulo: "Chulo pt.2", artista: "Bad Gyal, Tokischa, Young Miko", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
         { titulo: "Monotonía", artista: "Shakira ft. Ozuna", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
         { titulo: "La Bachata", artista: "Manuel Turizo", anio: 2022, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
-        { titulo: "Baby Hello", artista: "Rauw Alejandro ft. Bizarrap", dAnio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Baby Hello", artista: "Rauw Alejandro ft. Bizarrap", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" }, // Corregido dAnio por anio
         { titulo: "Solamente Tú", artista: "Pablo Alborán", anio: 2010, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
         { titulo: "Ateo", artista: "C. Tangana ft. Nathy Peluso", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
-        { titulo: "Tu Foto", artista: "Ozuna", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
-        { titulo: "El Merengue", artista: "Marshmello ft. Manuel Turizo", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
-        { titulo: "Clavaíto", artista: "Chanel ft. Abraham Mateo", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" }
+        { titulo: "Tu Foto", artista: "Ozuna", anio: 2017, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" }
     ];
 }
 
