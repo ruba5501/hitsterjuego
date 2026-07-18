@@ -303,7 +303,7 @@ function nuevoTurno() {
     btnReveal.style.display = 'none';
     btnSkip.style.display = 'block';
     btnTogglePause.style.display = 'block';
-    btnTogglePause.textContent = "⏸️ Pausar"; // Resetear texto del botón de pausa
+    btnTogglePause.textContent = "Pausar"; // Resetear texto del botón de pausa
     secretCard.classList.add('hidden');
     
     skipCostSpan.textContent = costoPasarCancion;
