@@ -130,6 +130,7 @@ async function intercambiarCodigoPorToken(code) {
     const codeVerifier = localStorage.getItem('pkce_code_verifier');
     const url = 'https://accounts.spotify.com/api/token';
 
+    // Aseguramos que todos los parámetros requeridos por Spotify estén presentes
     const cuerpo = new URLSearchParams({
         client_id: CLIENT_ID,
         grant_type: 'authorization_code',
@@ -141,11 +142,18 @@ async function intercambiarCodigoPorToken(code) {
     try {
         const respuesta = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: cuerpo
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: cuerpo.toString() // Forzamos la conversión a cadena de texto tipo query
         });
 
-        if (!respuesta.ok) throw new Error("Error en el intercambio de tokens");
+        if (!respuesta.ok) {
+            // Si falla, leemos el error exacto que devuelve Spotify para saber qué pasa
+            const errorDatos = await respuesta.json();
+            console.error("Detalles del error de Spotify:", errorDatos);
+            throw new Error(`Error en el intercambio: ${errorDatos.error_description || errorDatos.error}`);
+        }
 
         const datos = await respuesta.json();
         
