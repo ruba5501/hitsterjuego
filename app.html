@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitster Digital</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Hitster Digital</h1>
+    </header>
+
+    <main>
+        <!-- Sección del Reproductor -->
+        <section id="player-section">
+            <button id="btn-play">🟢 Conectar con Spotify</button>
+            <audio id="audio-player"></audio>
+        </section>
+
+        <!-- Sección de la Carta Central (Ocultas por defecto en CSS) -->
+        <section id="card-section" class="game-section">
+            <div id="secret-card" class="card hidden">
+                <h2 id="card-title">Título de la Canción</h2>
+                <p id="card-artist">Nombre del Artista</p>
+                <div>
+                    <span id="card-year">0000</span>
+                </div>
+            </div>
+            <button id="btn-reveal">Revelar Respuesta</button>
+        </section>
+
+        <!-- Sección de la Línea del Tiempo (Oculta por defecto en CSS) -->
+        <section id="timeline-section" class="game-section">
+            <h3>Tu Línea del Tiempo</h3>
+            <div id="timeline" class="timeline-container">
+                <!-- Las cartas acertadas se inyectarán aquí con JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
