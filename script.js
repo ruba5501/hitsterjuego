@@ -293,7 +293,24 @@ function cargarCancionesRespaldo() {
     cancionesJuego = [
         { titulo: "Bohemian Rhapsody", artista: "Queen", anio: 1975, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
         { titulo: "Thriller", artista: "Michael Jackson", anio: 1982, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-        { titulo: "Smooth", artista: "Santana", anio: 1999, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+        { titulo: "Stayin Alive", artista: "Bee Gees", anio: 1977, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "A Quién Le Importa", artista: "Alaska y Dinarama", anio: 1986, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+        { titulo: "Devuélveme a mi chica", artista: "Hombres G", anio: 1985, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "Un Año Más", artista: "Mecano", anio: 1988, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Macarena", artista: "Los Del Río", anio: 1993, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+        { titulo: "Corazón Partío", artista: "Alejandro Sanz", anio: 1997, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
+        { titulo: "Wannabe", artista: "Spice Girls", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+        { titulo: "La Flaca", artista: "Jarabe de Palo", anio: 1996, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+        { titulo: "Caminando por la vida", artista: "Melendi", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+        { titulo: "Zapatillas", artista: "El Canto del Loco", anio: 2005, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+        { titulo: "Aserejé", artista: "Las Ketchup", anio: 2002, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+        { titulo: "Gasolina", artista: "Daddy Yankee", anio: 2004, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+        { titulo: "Colgando en tus manos", artista: "Carlos Baute ft. Marta Sánchez", anio: 2008, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+        { titulo: "Por la boca vive el pez", artista: "Fito & Fitipaldis", anio: 2006, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+        { titulo: "Bailando", artista: "Enrique Iglesias", anio: 2014, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+        { titulo: "Malamente", artista: "Rosalía", anio: 2018, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+        { titulo: "Todo De Ti", artista: "Rauw Alejandro", anio: 2021, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
+        { titulo: "Nochentera", artista: "Vicco", anio: 2023, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" }
     ];
     siguienteCancion();
 }
