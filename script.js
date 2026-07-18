@@ -1,7 +1,7 @@
 // ==========================================================================
 // 1. CONFIGURACIÓN Y VARIABLES DE ESTADO
 // ==========================================================================
-const CLIENT_ID = 'TU_CLIENT_ID_DE_SPOTIFY'; // Cambia esto por tu ID de cliente real
+const CLIENT_ID = '401aa21001644430a51ac54c4198096b'; // ID de cliente compartido
 const PLAYLIST_ID = '37i9dQZF1DXcBWIGoNa3Xm'; // Playlist por defecto (Éxitos España)
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
 const SCOPES = 'playlist-read-private playlist-read-collaborative';
@@ -23,34 +23,39 @@ const cardYear = document.getElementById('card-year');
 const timeline = document.getElementById('timeline');
 
 // ==========================================================================
-// 2. SISTEMA DE AUTENTICACIÓN (OAUTH2)
+// 2. SISTEMA DE AUTENTICACIÓN (ADAPTADO A RESPONSE_TYPE=CODE)
 // ==========================================================================
 function verificarToken() {
-    const hash = window.location.hash.substring(1);
-    const parametros = new URLSearchParams(hash);
-    const token = parametros.get('access_token');
+    // 1. Intentamos leer el código de autorización desde los parámetros de la URL (?code=...)
+    const parametrosUrl = new URLSearchParams(window.location.search);
+    const codigoRespuesta = parametrosUrl.get('code');
 
-    if (token) {
-        accessToken = token;
-        window.location.hash = ''; 
+    if (codigoRespuesta) {
+        // Limpiamos los parámetros de la URL estéticamente para que no re-autentique al refrescar
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        accessToken = codigoRespuesta; 
         localStorage.setItem('spotify_token', accessToken);
         localStorage.setItem('token_expiry', Date.now() + 3600 * 1000); 
         iniciarJuego();
+        return;
+    }
+
+    // 2. Si no viene en la URL, buscamos si hay una sesión guardada previamente activa
+    const tokenGuardado = localStorage.getItem('spotify_token');
+    const expiracion = localStorage.getItem('token_expiry');
+    
+    if (tokenGuardado && expiracion && Date.now() < expiracion) {
+        accessToken = tokenGuardado;
+        iniciarJuego();
     } else {
-        const tokenGuardado = localStorage.getItem('spotify_token');
-        const expiracion = localStorage.getItem('token_expiry');
-        
-        if (tokenGuardado && expiracion && Date.now() < expiracion) {
-            accessToken = tokenGuardado;
-            iniciarJuego();
-        } else {
-            mostrarPantallaLogin();
-        }
+        mostrarPantallaLogin();
     }
 }
 
 function iniciarSesionSpotify() {
-    const urlLogin = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}`;
+    // Se fuerza la petición usando el parámetro estricto 'code' exigido por los nuevos perfiles de Spotify
+    const urlLogin = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}`;
     window.location.href = urlLogin;
 }
 
