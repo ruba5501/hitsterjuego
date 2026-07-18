@@ -351,10 +351,10 @@ function prepararSelectorEspacios() {
 btnTogglePause.addEventListener('click', () => {
     if (audioPlayer.paused) {
         audioPlayer.play().catch(() => console.log("Error al reanudar"));
-        btnTogglePause.textContent = "⏸️ Pausar";
+        btnTogglePause.textContent = "Pausar";
     } else {
         audioPlayer.pause();
-        btnTogglePause.textContent = "▶️ Reanudar";
+        btnTogglePause.textContent = "Reanudar";
     }
 });
 
