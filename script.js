@@ -291,6 +291,7 @@ async function obtenerCancionesSpotify(idPlaylist) {
 
     } catch (error) {
         console.error("Error al cargar Spotify:", error);
+        alert(`Error de Spotify: ${error.message}`);
         return false;
     }
 }
