@@ -3,12 +3,7 @@ const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = 'streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative';
 
 const CANCIONES_LOCALES = [
-    { titulo: "Bohemian Rhapsody", artista: "Queen", anio: 1975, audioUrl: "audio/bohemian.mp3" },
-    { titulo: "Thriller", artista: "Michael Jackson", anio: 1982, audioUrl: "audio/thriller.mp3" },
-    { titulo: "Smells Like Teen Spirit", artista: "Nirvana", anio: 1991, audioUrl: "audio/nirvana.mp3" },
-    { titulo: "Billie Jean", artista: "Michael Jackson", anio: 1982, audioUrl: "audio/billie_jean.mp3" },
-    { titulo: "Sweet Child O' Mine", artista: "Guns N' Roses", anio: 1987, audioUrl: "audio/sweet_child.mp3" },
-    { titulo: "Despacito", artista: "Luis Fonsi", anio: 2017, audioUrl: "audio/despacito.mp3" }
+    { titulo: "Por la raja de tu falda", artista: "Estopa", anio: 1999, audioUrl: "audio/cancion.mp3" },
 ];
 
 let playlistIdActual = '37i9dQZEVXbNFJfN13P3Xx';
