@@ -12,10 +12,20 @@
     </header>
 
     <main>
-        <section id="player-section">
-            <button id="btn-play">Conectar con Spotify Premium</button>
+        <!-- SECCIÓN DE SELECCIÓN DE MODO Y LOGIN -->
+        <section id="player-section" style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px;">
+            <button id="btn-play" style="background-color: #1db954; color: white;">Conectar con Spotify Premium</button>
+            
+            <div style="display: flex; align-items: center; text-align: center; color: var(--text-secondary, #888); margin: 5px 0;">
+                <span style="flex: 1; border-bottom: 1px solid #333;"></span>
+                <span style="padding: 0 10px; font-size: 0.85rem; text-transform: uppercase;">o</span>
+                <span style="flex: 1; border-bottom: 1px solid #333;"></span>
+            </div>
+
+            <button id="btn-offline" style="background-color: #34495e; color: white;">Jugar en Modo Offline (Archivos Locales)</button>
         </section>
 
+        <!-- CONFIGURACIÓN DE PARTIDA -->
         <section id="setup-section" class="game-section" style="display: none; flex-direction: column; gap: 15px;">
             <h3>Configuración de la Partida</h3>
             <label for="num-teams">¿Cuántos equipos van a jugar? (2-4):</label>
@@ -26,6 +36,7 @@
             <button id="btn-start-game">Comenzar Partida</button>
         </section>
 
+        <!-- PANTALLA DE JUEGO -->
         <section id="game-play-section" class="game-section" style="display: none; width: 100%; flex-direction: column; gap: 20px;">
             
             <div id="turn-indicator" style="background: #222; width: 100%; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; border-left: 5px solid var(--accent-color);">
@@ -71,7 +82,7 @@
             </div>
         </section>
 
-        <button id="btn-logout" class="btn-secondary" style="display: none; margin-top: 20px;">Salir</button>
+        <button id="btn-logout" class="btn-secondary" style="display: none; margin-top: 20px;">Cerrar Sesión Spotify</button>
     </main>
 
     <script src="https://sdk.scdn.co/spotify-player.js"></script>

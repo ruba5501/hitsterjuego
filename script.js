@@ -1,9 +1,18 @@
 const CLIENT_ID = '401aa21001644430a51ac54c4198096b';
 const PLAYLIST_ID = '37i9dQZF1DXcBWIGoNa3Xm';
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
-// Scopes actualizados con permisos de reproductor web
 const SCOPES = 'streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative';
 
+const CANCIONES_LOCALES = [
+    { titulo: "Bohemian Rhapsody", artista: "Queen", anio: 1975, audioUrl: "audio/bohemian.mp3" },
+    { titulo: "Thriller", artista: "Michael Jackson", anio: 1982, audioUrl: "audio/thriller.mp3" },
+    { titulo: "Smells Like Teen Spirit", artista: "Nirvana", anio: 1991, audioUrl: "audio/nirvana.mp3" },
+    { titulo: "Billie Jean", artista: "Michael Jackson", anio: 1982, audioUrl: "audio/billie_jean.mp3" },
+    { titulo: "Sweet Child O' Mine", artista: "Guns N' Roses", anio: 1987, audioUrl: "audio/sweet_child.mp3" },
+    { titulo: "Despacito", artista: "Luis Fonsi", anio: 2017, audioUrl: "audio/despacito.mp3" }
+];
+
+let modoOffline = false;
 let cancionesJuego = [];
 let cancionActual = null;
 let accessToken = null;
@@ -13,10 +22,12 @@ let costoPasarCancion = 1;
 let apuestasRivales = {}; 
 let posicionElegidaActivo = null;
 
-// Variables de reproducción Web Playback SDK
+// Reproductor HTML5 para modo offline
+const reproductorLocal = new Audio();
+
+// Variables de reproducción Web Playback SDK (Spotify)
 let spotifyPlayer = null;
 let spotifyDeviceId = null;
-let isPlayerPaused = false;
 
 // Elementos del DOM
 const btnPlay = document.getElementById('btn-play');
@@ -44,18 +55,40 @@ const activeTeamBetDiv = document.getElementById('active-team-bet');
 const phaseTitle = document.getElementById('phase-title');
 
 function mostrarPantallaLogin() {
+    // Botón principal: Spotify
     btnPlay.textContent = "Conectar con Spotify Premium";
     btnPlay.onclick = iniciarSesionSpotify;
+
+    // Crear o reutilizar botón para Modo Offline
+    let btnOffline = document.getElementById('btn-offline');
+    if (!btnOffline) {
+        btnOffline = document.createElement('button');
+        btnOffline.id = 'btn-offline';
+        btnOffline.textContent = "Jugar en Modo Offline (Sin Spotify)";
+        btnOffline.style.cssText = "margin-top: 10px; background-color: #34495e; color: white;";
+        btnPlay.parentNode.appendChild(btnOffline);
+    }
+    btnOffline.onclick = iniciarJuegoOffline;
+
     if (btnLogout) btnLogout.style.display = 'none'; 
     setupSection.style.display = 'none';
     gamePlaySection.style.display = 'none';
 }
 
-function iniciarJuego() {
-    if (btnLogout) btnLogout.style.display = 'block'; 
-    btnPlay.style.display = 'none';
+function iniciarJuegoOffline() {
+    modoOffline = true;
+    cancionesJuego = JSON.parse(JSON.stringify(CANCIONES_LOCALES));
     
-    // Inicializar reproductor de Spotify SDK
+    document.getElementById('player-section').style.display = 'none';
+    setupSection.style.display = 'flex';
+    generarFormularioEquipos();
+}
+
+function iniciarJuego() {
+    modoOffline = false;
+    if (btnLogout) btnLogout.style.display = 'block'; 
+    document.getElementById('player-section').style.display = 'none';
+    
     inicializarReproductorSpotify();
 
     setupSection.style.display = 'flex';
@@ -71,9 +104,7 @@ function cerrarSesion() {
 }
 
 // CONFIGURACIÓN DEL REPRODUCTOR WEB DE SPOTIFY (SDK)
-window.onSpotifyWebPlaybackSDKReady = () => {
-    // Escuchador automático del SDK listo
-};
+window.onSpotifyWebPlaybackSDKReady = () => {};
 
 function inicializarReproductorSpotify() {
     if (!accessToken) return;
@@ -85,36 +116,58 @@ function inicializarReproductorSpotify() {
     });
 
     spotifyPlayer.addListener('ready', ({ device_id }) => {
-        console.log('Reproductor listo con ID:', device_id);
         spotifyDeviceId = device_id;
     });
 
     spotifyPlayer.addListener('player_state_changed', state => {
         if (!state) return;
-        isPlayerPaused = state.paused;
-        btnTogglePause.textContent = isPlayerPaused ? "Reanudar" : "Pausar";
+        btnTogglePause.textContent = state.paused ? "Reanudar" : "Pausar";
     });
 
     spotifyPlayer.connect();
 }
 
-async function reproducirCancionSpotify(uri) {
-    if (!spotifyDeviceId || !accessToken) {
-        console.warn("El reproductor de Spotify no está listo todavía.");
-        return;
-    }
+async function reproducirCancion(cancion) {
+    if (modoOffline) {
+        reproductorLocal.src = cancion.audioUrl;
+        reproductorLocal.play().catch(e => console.error("Error al reproducir audio local:", e));
+    } else {
+        if (!spotifyDeviceId || !accessToken) return;
 
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ uris: [uri] }),
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-        }
-    });
+        await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ uris: [cancion.spotifyUri] }),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+    }
 }
 
-// HERRAMIENTAS CRIPTOGRÁFICAS PARA PKCE
+function pausarAudio() {
+    if (modoOffline) {
+        reproductorLocal.pause();
+    } else if (spotifyPlayer) {
+        spotifyPlayer.pause();
+    }
+}
+
+function alternarPausa() {
+    if (modoOffline) {
+        if (reproductorLocal.paused) {
+            reproductorLocal.play();
+            btnTogglePause.textContent = "Pausar";
+        } else {
+            reproductorLocal.pause();
+            btnTogglePause.textContent = "Reanudar";
+        }
+    } else if (spotifyPlayer) {
+        spotifyPlayer.togglePlay();
+    }
+}
+
+// AUTENTICACIÓN PKCE SPOTIFY
 function generarCadenaAleatoria(longitud) {
     const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     let resultado = '';
@@ -134,7 +187,6 @@ async function generarCodeChallenge(codeVerifier) {
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// SISTEMA DE AUTENTICACIÓN
 async function verificarToken() {
     const parametrosUrl = new URLSearchParams(window.location.search);
     const codigoRespuesta = parametrosUrl.get('code');
@@ -191,10 +243,7 @@ async function intercambiarCodigoPorToken(code) {
             body: cuerpo.toString()
         });
 
-        if (!respuesta.ok) {
-            const errorDatos = await respuesta.json();
-            throw new Error(`Error: ${errorDatos.error}`);
-        }
+        if (!respuesta.ok) throw new Error("Error en autenticación");
 
         const datos = await respuesta.json();
         accessToken = datos.access_token;
@@ -204,10 +253,10 @@ async function intercambiarCodigoPorToken(code) {
         iniciarJuego();
     } catch (error) {
         console.error(error);
+        mostrarPantallaLogin();
     }
 }
 
-// CONEXIÓN CON LA API DE SPOTIFY
 async function obtenerCancionesSpotify() {
     const url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?fields=items(track(name,uri,artists,album(release_date)))`;
     try {
@@ -225,10 +274,12 @@ async function obtenerCancionesSpotify() {
             }));
 
     } catch (error) {
-        console.error("Error al cargar la lista de Spotify:", error);
+        console.error("Error al cargar Spotify, cambiando a modo offline:", error);
+        iniciarJuegoOffline();
     }
 }
 
+// FORMULARIO Y LÓGICA DEL JUEGO
 document.getElementById('num-teams').addEventListener('input', generarFormularioEquipos);
 
 function generarFormularioEquipos() {
@@ -266,7 +317,8 @@ btnStartGame.addEventListener('click', () => {
             titulo: "Año Inicial",
             artista: "Elección del equipo",
             anio: anioInput,
-            spotifyUri: null
+            spotifyUri: null,
+            audioUrl: null
         };
 
         equipos.push({
@@ -318,7 +370,7 @@ function actualizarTableroVisual() {
             const miniCarta = document.createElement('div');
             miniCarta.classList.add('timeline-card');
             
-            if (cancion.spotifyUri === null) {
+            if (!cancion.spotifyUri && !cancion.audioUrl) {
                 miniCarta.innerHTML = `
                     <div class="year" style="font-size: 1.8rem; font-weight: bold; color: #ffffff; background: #2a2a2a; padding: 15px 10px; border-radius: 6px; text-align: center; width: 100%; max-width: 100%; box-sizing: border-box; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin: 0 auto; display: block;">
                         ${cancion.anio}
@@ -337,6 +389,11 @@ function actualizarTableroVisual() {
 }
 
 function nuevoTurno() {
+    if (cancionesJuego.length === 0) {
+        alert("¡Se han acabado las canciones disponibles!");
+        return;
+    }
+
     apuestasRivales = {};
     posicionElegidaActivo = null;
     
@@ -363,8 +420,7 @@ function nuevoTurno() {
     cardArtist.textContent = cancionActual.artista;
     cardYear.textContent = cancionActual.anio;
 
-    // Reproducir pista completa mediante la API de Spotify
-    reproducirCancionSpotify(cancionActual.spotifyUri);
+    reproducirCancion(cancionActual);
     
     prepararSelectorEspacios();
     actualizarTableroVisual();
@@ -394,21 +450,15 @@ function prepararSelectorEspacios() {
     }
 }
 
-// CONTROLADOR DE PAUSA / REANUDACIÓN VÍA SPOTIFY SDK
-btnTogglePause.addEventListener('click', () => {
-    if (!spotifyPlayer) return;
-    spotifyPlayer.togglePlay();
-});
+// CONTROLADORES DE REPRODUCCIÓN
+btnTogglePause.addEventListener('click', alternarPausa);
 
-// CONTROLADORES DE ACCIONES Y APUESTAS 
 btnSkip.addEventListener('click', () => {
     const eq = equipos[turnoActual];
-    if (eq.fichas < costoPasarCancion) {
-        return;
-    }
+    if (eq.fichas < costoPasarCancion) return;
     eq.fichas -= costoPasarCancion;
     costoPasarCancion++; 
-    if (spotifyPlayer) spotifyPlayer.pause();
+    pausarAudio();
     nuevoTurno();
 });
 
@@ -420,7 +470,6 @@ btnConfirmActive.addEventListener('click', () => {
     btnTogglePause.style.display = 'none';
     
     phaseTitle.textContent = "Turno de Robo de los Rivales";
-    
     rivalsButtonsContainer.innerHTML = '';
 
     equipos.forEach((eq, index) => {
@@ -464,7 +513,7 @@ btnConfirmActive.addEventListener('click', () => {
 });
 
 btnReveal.addEventListener('click', () => {
-    if (spotifyPlayer) spotifyPlayer.pause();
+    pausarAudio();
     secretCard.classList.remove('hidden');
     btnReveal.style.display = 'none';
     rivalsBetPanel.style.display = 'none';
