@@ -11,7 +11,7 @@ const CANCIONES_LOCALES = [
     { titulo: "Despacito", artista: "Luis Fonsi", anio: 2017, audioUrl: "audio/despacito.mp3" }
 ];
 
-let playlistIdActual = '37i9dQZF1DXcBWIGoNa3Xm'; // Playlist por defecto
+let playlistIdActual = '37i9dQZEVXbNFJfN13P3Xx';
 let modoOffline = false;
 let cancionesJuego = [];
 let cancionActual = null;
