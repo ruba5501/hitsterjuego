@@ -105,10 +105,15 @@ function iniciarJuego() {
 }
 
 function cerrarSesion() {
-    localStorage.removeItem('spotify_token');
-    localStorage.removeItem('token_expiry');
-    localStorage.removeItem('pkce_code_verifier');
-    window.location.reload();
+    localStorage.clear();
+    
+    const logoutUrl = 'https://www.spotify.com/logout/';
+    const spotifyWindow = window.open(logoutUrl, '_blank', 'width=700,height=500');
+    
+    setTimeout(() => {
+        if (spotifyWindow) spotifyWindow.close();
+        window.location.href = window.location.origin + window.location.pathname;
+    }, 2000);
 }
 
 // CONFIGURACIÓN DEL REPRODUCTOR WEB DE SPOTIFY (SDK)
