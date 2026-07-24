@@ -28,6 +28,17 @@
         <!-- CONFIGURACIÓN DE PARTIDA -->
         <section id="setup-section" class="game-section" style="display: none; flex-direction: column; gap: 15px;">
             <h3>Configuración de la Partida</h3>
+            
+            <!-- CAMPO DE PLAYLIST (SPOTIFY) -->
+            <div id="playlist-input-container" style="display: flex; flex-direction: column; gap: 5px;">
+                <label for="playlist-url">Enlace o ID de la Playlist de Spotify:</label>
+                <input type="text" id="playlist-url" 
+                    placeholder="Ej: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoNa3Xm..." 
+                    value="37i9dQZF1DXcBWIGoNa3Xm"
+                    style="padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; width: 100%;">
+                <small style="color: #888;">Puedes pegar la URL completa desde Spotify o el ID directo de la lista.</small>
+            </div>
+
             <label for="num-teams">¿Cuántos equipos van a jugar? (2-4):</label>
             <input type="number" id="num-teams" min="2" max="4" value="2" style="padding: 10px; border-radius: 5px; width: 100%; text-align: center;">
             

@@ -1,5 +1,4 @@
 const CLIENT_ID = '401aa21001644430a51ac54c4198096b';
-const PLAYLIST_ID = '37i9dQZF1DXcBWIGoNa3Xm';
 const REDIRECT_URI = window.location.origin + window.location.pathname; 
 const SCOPES = 'streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative';
 
@@ -12,6 +11,7 @@ const CANCIONES_LOCALES = [
     { titulo: "Despacito", artista: "Luis Fonsi", anio: 2017, audioUrl: "audio/despacito.mp3" }
 ];
 
+let playlistIdActual = '37i9dQZF1DXcBWIGoNa3Xm'; // Playlist por defecto
 let modoOffline = false;
 let cancionesJuego = [];
 let cancionActual = null;
@@ -59,6 +59,17 @@ const phaseTitle = document.getElementById('phase-title');
 if (btnPlay) btnPlay.onclick = iniciarSesionSpotify;
 if (btnOffline) btnOffline.onclick = iniciarJuegoOffline;
 
+// Extrae el ID limpio tanto si se pega una URL completa como un ID directo
+function extraerPlaylistId(input) {
+    if (!input) return null;
+    const urlLimpia = input.trim();
+    if (urlLimpia.includes('/playlist/')) {
+        const parteID = urlLimpia.split('/playlist/')[1];
+        return parteID.split('?')[0];
+    }
+    return urlLimpia;
+}
+
 function mostrarPantallaLogin() {
     if (btnLogout) btnLogout.style.display = 'none'; 
     document.getElementById('player-section').style.display = 'flex';
@@ -68,9 +79,13 @@ function mostrarPantallaLogin() {
 
 function iniciarJuegoOffline() {
     modoOffline = true;
-    cancionesJuego = CANCIONES_LOCALES.map(c => ({ ...c })); // Clonar lista
+    cancionesJuego = CANCIONES_LOCALES.map(c => ({ ...c }));
     
     document.getElementById('player-section').style.display = 'none';
+    
+    const playlistContainer = document.getElementById('playlist-input-container');
+    if (playlistContainer) playlistContainer.style.display = 'none';
+
     setupSection.style.display = 'flex';
     generarFormularioEquipos();
 }
@@ -82,9 +97,11 @@ function iniciarJuego() {
     
     inicializarReproductorSpotify();
 
+    const playlistContainer = document.getElementById('playlist-input-container');
+    if (playlistContainer) playlistContainer.style.display = 'flex';
+
     setupSection.style.display = 'flex';
     generarFormularioEquipos();
-    obtenerCancionesSpotify(); 
 }
 
 function cerrarSesion() {
@@ -248,14 +265,14 @@ async function intercambiarCodigoPorToken(code) {
     }
 }
 
-async function obtenerCancionesSpotify() {
-    const url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?fields=items(track(name,uri,artists,album(release_date)))`;
+async function obtenerCancionesSpotify(idPlaylist) {
+    const url = `https://api.spotify.com/v1/playlists/${idPlaylist}/tracks?fields=items(track(name,uri,artists,album(release_date)))`;
     try {
         const respuesta = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!respuesta.ok) throw new Error("Error obteniendo playlist");
         
         const datos = await respuesta.json();
-        cancionesJuego = datos.items
+        const cancionesFiltradas = datos.items
             .filter(item => item.track && item.track.album && item.track.album.release_date)
             .map(item => ({
                 titulo: item.track.name,
@@ -264,9 +281,17 @@ async function obtenerCancionesSpotify() {
                 spotifyUri: item.track.uri
             }));
 
+        if (cancionesFiltradas.length === 0) {
+            alert("La playlist no contiene canciones válidas.");
+            return false;
+        }
+
+        cancionesJuego = cancionesFiltradas;
+        return true;
+
     } catch (error) {
-        console.error("Error al cargar Spotify, cambiando a modo offline:", error);
-        iniciarJuegoOffline();
+        console.error("Error al cargar Spotify:", error);
+        return false;
     }
 }
 
@@ -290,12 +315,30 @@ function generarFormularioEquipos() {
     }
 }
 
-btnStartGame.addEventListener('click', () => {
+btnStartGame.addEventListener('click', async () => {
     const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
     
     if (document.getElementById('teams-input-container').children.length === 0) {
         generarFormularioEquipos();
         return; 
+    }
+
+    if (!modoOffline) {
+        const inputPlaylist = document.getElementById('playlist-url').value;
+        const idExtraido = extraerPlaylistId(inputPlaylist);
+        
+        if (!idExtraido) {
+            alert("Por favor, introduce una URL o ID de playlist válida.");
+            return;
+        }
+
+        playlistIdActual = idExtraido;
+        const exito = await obtenerCancionesSpotify(playlistIdActual);
+        
+        if (!exito) {
+            alert("No se pudo cargar la playlist. Verifica que sea pública y que la URL sea correcta.");
+            return;
+        }
     }
 
     equipos = [];
@@ -420,7 +463,6 @@ function nuevoTurno() {
 function prepararSelectorEspacios() {
     selectPlacement.innerHTML = '';
     
-    // Aseguramos que la línea del tiempo esté ordenada cronológicamente
     const lt = equipos[turnoActual].lineaTiempo.sort((a, b) => a.anio - b.anio);
     
     if (lt.length === 0) return;
