@@ -31,6 +31,7 @@ let spotifyDeviceId = null;
 
 // Elementos del DOM
 const btnPlay = document.getElementById('btn-play');
+const btnOffline = document.getElementById('btn-offline');
 const btnReveal = document.getElementById('btn-reveal');
 const btnSkip = document.getElementById('btn-skip');
 const btnTogglePause = document.getElementById('btn-toggle-pause');
@@ -54,30 +55,20 @@ const teamsBoard = document.getElementById('teams-board');
 const activeTeamBetDiv = document.getElementById('active-team-bet');
 const phaseTitle = document.getElementById('phase-title');
 
+// Event Listeners Principales
+if (btnPlay) btnPlay.onclick = iniciarSesionSpotify;
+if (btnOffline) btnOffline.onclick = iniciarJuegoOffline;
+
 function mostrarPantallaLogin() {
-    // Botón principal: Spotify
-    btnPlay.textContent = "Conectar con Spotify Premium";
-    btnPlay.onclick = iniciarSesionSpotify;
-
-    // Crear o reutilizar botón para Modo Offline
-    let btnOffline = document.getElementById('btn-offline');
-    if (!btnOffline) {
-        btnOffline = document.createElement('button');
-        btnOffline.id = 'btn-offline';
-        btnOffline.textContent = "Jugar en Modo Offline (Sin Spotify)";
-        btnOffline.style.cssText = "margin-top: 10px; background-color: #34495e; color: white;";
-        btnPlay.parentNode.appendChild(btnOffline);
-    }
-    btnOffline.onclick = iniciarJuegoOffline;
-
     if (btnLogout) btnLogout.style.display = 'none'; 
+    document.getElementById('player-section').style.display = 'flex';
     setupSection.style.display = 'none';
     gamePlaySection.style.display = 'none';
 }
 
 function iniciarJuegoOffline() {
     modoOffline = true;
-    cancionesJuego = JSON.parse(JSON.stringify(CANCIONES_LOCALES));
+    cancionesJuego = CANCIONES_LOCALES.map(c => ({ ...c })); // Clonar lista
     
     document.getElementById('player-section').style.display = 'none';
     setupSection.style.display = 'flex';
@@ -291,7 +282,7 @@ function generarFormularioEquipos() {
         const divEquipo = document.createElement('div');
         divEquipo.style.cssText = "display: flex; flex-direction: column; gap: 5px; background: #222; padding: 10px; border-radius: 5px;";
         divEquipo.innerHTML = `
-            <strong style="color: var(--accent-color);">Equipo ${i}</strong>
+            <strong style="color: var(--accent-color, #1db954);">Equipo ${i}</strong>
             <input type="text" id="name-team-${i}" value="Equipo ${i}" placeholder="Nombre del Equipo" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
             <input type="number" id="year-team-${i}" value="${1990 + (i * 5)}" placeholder="Año de su primera canción" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
         `;
@@ -349,11 +340,11 @@ function actualizarTableroVisual() {
     teamsBoard.innerHTML = '';
     equipos.forEach((eq, index) => {
         const contenedorEq = document.createElement('div');
-        contenedorEq.style.cssText = `background: #1e1e1e; padding: 15px; border-radius: 10px; border: 2px solid ${index === turnoActual ? 'var(--accent-color)' : '#333'}`;
+        contenedorEq.style.cssText = `background: #1e1e1e; padding: 15px; border-radius: 10px; border: 2px solid ${index === turnoActual ? 'var(--accent-color, #1db954)' : '#333'}`;
         
         contenedorEq.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; font-weight:bold;">
-                <span style="color: ${index === turnoActual ? 'var(--accent-color)' : 'white'}">${eq.nombre} ${index === turnoActual ? '(Jugando)' : ''}</span>
+                <span style="color: ${index === turnoActual ? 'var(--accent-color, #1db954)' : 'white'}">${eq.nombre} ${index === turnoActual ? '(Jugando)' : ''}</span>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="color: #e67e22; margin-right:5px;">🪙 Fichas: <span id="fichas-val-${eq.id}">${eq.fichas}</span></span>
                     <button onclick="modificarFichas(${eq.id}, 1)" style="padding:2px 8px; width:auto; background:#2ecc71; font-size:0.8rem;">+1</button>
@@ -428,26 +419,41 @@ function nuevoTurno() {
 
 function prepararSelectorEspacios() {
     selectPlacement.innerHTML = '';
-    const lt = equipos[turnoActual].lineaTiempo;
     
+    // Aseguramos que la línea del tiempo esté ordenada cronológicamente
+    const lt = equipos[turnoActual].lineaTiempo.sort((a, b) => a.anio - b.anio);
+    
+    if (lt.length === 0) return;
+
+    if (lt.length === 1) {
+        const opAntes = document.createElement('option');
+        opAntes.value = "0";
+        opAntes.textContent = `Antes de ${lt[0].anio}`;
+        selectPlacement.appendChild(opAntes);
+
+        const opDespues = document.createElement('option');
+        opDespues.value = "1";
+        opDespues.textContent = `Después de ${lt[0].anio}`;
+        selectPlacement.appendChild(opDespues);
+        return;
+    }
+
     const opAntes = document.createElement('option');
     opAntes.value = "0";
     opAntes.textContent = `Antes de ${lt[0].anio}`;
     selectPlacement.appendChild(opAntes);
 
-    for(let i = 0; i < lt.length - 1; i++) {
+    for (let i = 0; i < lt.length - 1; i++) {
         const opEntre = document.createElement('option');
         opEntre.value = `${i + 1}`;
-        opEntre.textContent = `Entre ${lt[i].anio} y ${lt[i+1].anio}`;
+        opEntre.textContent = `Entre ${lt[i].anio} y ${lt[i + 1].anio}`;
         selectPlacement.appendChild(opEntre);
     }
 
-    if(lt.length > 0) {
-        const opDespues = document.createElement('option');
-        opDespues.value = `${lt.length}`;
-        opDespues.textContent = `Después de ${lt[lt.length-1].anio}`;
-        selectPlacement.appendChild(opDespues);
-    }
+    const opDespues = document.createElement('option');
+    opDespues.value = `${lt.length}`;
+    opDespues.textContent = `Después de ${lt[lt.length - 1].anio}`;
+    selectPlacement.appendChild(opDespues);
 }
 
 // CONTROLADORES DE REPRODUCCIÓN
