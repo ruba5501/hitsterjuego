@@ -12,71 +12,71 @@
     </header>
 
     <main>
-        <!-- SECCIÓN DE SELECCIÓN DE MODO Y LOGIN -->
-        <section id="player-section" style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px;">
-            <button id="btn-play" style="background-color: #1db954; color: white;">Conectar con Spotify Premium</button>
+        <!-- SELECCIÓN DE MODO Y LOGIN -->
+        <section id="player-section" class="player-selection">
+            <button id="btn-play" class="btn-spotify">Conectar con Spotify Premium</button>
             
-            <div style="display: flex; align-items: center; text-align: center; color: var(--text-secondary, #888); margin: 5px 0;">
-                <span style="flex: 1; border-bottom: 1px solid #333;"></span>
-                <span style="padding: 0 10px; font-size: 0.85rem; text-transform: uppercase;">o</span>
-                <span style="flex: 1; border-bottom: 1px solid #333;"></span>
+            <div class="divider">
+                <span></span>
+                <span class="divider-text">o</span>
+                <span></span>
             </div>
 
-            <button id="btn-offline" style="background-color: #34495e; color: white;">Jugar en Modo Offline (No funciona jejeje)</button>
+            <button id="btn-offline" class="btn-offline">Jugar en Modo Offline (No funciona jejeje)</button>
         </section>
 
         <!-- CONFIGURACIÓN DE PARTIDA -->
-        <section id="setup-section" class="game-section" style="display: none; flex-direction: column; gap: 15px;">
+        <section id="setup-section" class="game-section">
             <h3>Configuración de la Partida</h3>
             
             <!-- CAMPO DE PLAYLIST (SPOTIFY) -->
-            <div id="playlist-input-container" style="display: flex; flex-direction: column; gap: 5px;">
+            <div id="playlist-input-container" class="form-group">
                 <label for="playlist-url">Enlace o ID de la Playlist de Spotify:</label>
                 <input type="text" id="playlist-url" 
                     placeholder="Ej: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoNa3Xm..." 
-                    value="37i9dQZF1DXcBWIGoNa3Xm"
-                    style="padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; width: 100%;">
-                <small style="color: #888;">Puedes pegar la URL completa desde Spotify o el ID directo de la lista.</small>
+                    value="37i9dQZF1DXcBWIGoNa3Xm">
+                <small>Puedes pegar la URL completa desde Spotify o el ID directo de la lista.</small>
             </div>
 
-            <label for="num-teams">¿Cuántos equipos van a jugar? (2-4):</label>
-            <input type="number" id="num-teams" min="2" max="4" value="2" style="padding: 10px; border-radius: 5px; width: 100%; text-align: center;">
+            <div class="form-group">
+                <label for="num-teams">¿Cuántos equipos van a jugar? (2-4):</label>
+                <input type="number" id="num-teams" min="2" max="4" value="2" class="input-center">
+            </div>
             
-            <div id="teams-input-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;"></div>
+            <div id="teams-input-container" class="form-group"></div>
 
             <button id="btn-start-game">Comenzar Partida</button>
         </section>
 
         <!-- PANTALLA DE JUEGO -->
-        <section id="game-play-section" class="game-section" style="display: none; width: 100%; flex-direction: column; gap: 20px;">
+        <section id="game-play-section" class="game-section">
             
-            <div id="turn-indicator" style="background: #222; width: 100%; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; border-left: 5px solid var(--accent-color);">
+            <div id="turn-indicator" class="turn-box">
                 Turno del Equipo
             </div>
 
-            <!-- CONTROLES DE REPRODUCCIÓN -->
-            <div style="display: flex; gap: 10px; width: 100%;">
-                <button id="btn-toggle-pause" style="background-color: #3498db; color: white; flex: 1;">Pausar</button>
-                <button id="btn-skip" style="background-color: #e67e22; color: white; flex: 2;">Pasar Canción (Cuesta <span id="skip-cost">1</span> 🪙)</button>
+            <div class="action-row">
+                <button id="btn-toggle-pause" class="btn-pause">Pausar</button>
+                <button id="btn-skip" class="btn-skip">Pasar Canción (Cuesta <span id="skip-cost">1</span> 🪙)</button>
             </div>
 
-            <div id="betting-panel" style="background: #1a1a1a; padding: 15px; border-radius: 11px; width: 100%; display: flex; flex-direction: column; gap: 10px;">
-                <h4 id="phase-title" style="color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">Fase de Colocación</h4>
+            <div id="betting-panel" class="betting-container">
+                <h4 id="phase-title" class="section-subtitle">Fase de Colocación</h4>
                 
                 <div id="active-team-bet">
-                    <p id="bet-instruction" style="font-size: 0.9rem; margin-bottom: 5px;">Selecciona dónde encaja esta canción en tu línea temporal:</p>
-                    <select id="select-placement" style="width:100%; padding: 10px; border-radius: 5px; background: #333; color: white;"></select>
-                    <button id="btn-confirm-active" style="margin-top: 10px; background-color: var(--accent-color); color: white;">Confirmar Posición</button>
+                    <p id="bet-instruction">Selecciona dónde encaja esta canción en tu línea temporal:</p>
+                    <select id="select-placement"></select>
+                    <button id="btn-confirm-active" class="btn-confirm">Confirmar Posición</button>
                 </div>
 
-                <div id="rivals-bet-panel" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; display: none;">
-                    <p style="font-size: 0.9rem; color: #ff0080; font-weight: bold;">¿Algún equipo rival quiere apostar al robo?</p>
-                    <div id="rivals-buttons-container" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>
+                <div id="rivals-bet-panel" class="rivals-panel">
+                    <p class="rivals-title">¿Algún equipo rival quiere apostar al robo?</p>
+                    <div id="rivals-buttons-container" class="rivals-container"></div>
                 </div>
             </div>
 
-            <div id="card-section" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                <button id="btn-reveal" style="display: none; background-color: #2ecc71; color: white; margin-bottom: 15px;"> Revelar Respuesta y Validar</button>
+            <div id="card-section">
+                <button id="btn-reveal" class="btn-reveal">Revelar Respuesta y Validar</button>
                 
                 <div id="secret-card" class="card hidden">
                     <h2 id="card-title">Título de la Canción</h2>
@@ -86,14 +86,13 @@
                     </div>
                 </div>
                 
-                <button id="btn-resolve-turn" style="background-color: var(--text-color); color: black; display: none; margin-top: 15px; width: 100%;">Terminar Turno y Avanzar</button>
+                <button id="btn-resolve-turn" class="btn-resolve">Terminar Turno y Avanzar</button>
             </div>
 
-            <div id="teams-board" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-            </div>
+            <div id="teams-board"></div>
         </section>
 
-        <button id="btn-logout" class="btn-secondary" style="display: none; margin-top: 20px;">Cerrar Sesión Spotify</button>
+        <button id="btn-logout" class="btn-secondary">Cerrar Sesión Spotify</button>
     </main>
 
     <script src="https://sdk.scdn.co/spotify-player.js"></script>

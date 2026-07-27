@@ -1,13 +1,12 @@
-/* ==========================================================================
-   1. CONFIGURACIÓN GENERAL Y COLORES
-   ========================================================================== */
 :root {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
     --text-color: #ffffff;
     --text-secondary: #b3b3b3;
-    --accent-color: #1db954; /* Verde Spotify */
+    --accent-color: #1db954;
     --gradient-hidden: linear-gradient(135deg, #7928ca, #ff0080);
+    --border-color: #333333;
+    --input-bg: #222222;
 }
 
 * {
@@ -47,16 +46,7 @@ main {
     gap: 30px;
 }
 
-/* Evita el parpadeo ocultando las secciones de juego antes del login */
-.game-section {
-    display: none; 
-    flex-direction: column;
-    align-items: center;
-}
-
-/* ==========================================================================
-   2. BOTONES
-   ========================================================================== */
+/* BOTONES GENERALES */
 button {
     background-color: var(--accent-color);
     color: black;
@@ -67,7 +57,7 @@ button {
     border-radius: 25px;
     cursor: pointer;
     width: 100%;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: transform 0.2s, background-color 0.2s, filter 0.2s;
 }
 
 button:hover {
@@ -75,22 +65,144 @@ button:hover {
     filter: brightness(1.1);
 }
 
-#btn-reveal {
-    background-color: #ffffff;
-    color: #000000;
-    margin-top: 15px;
+.btn-spotify { background-color: #1db954; color: white; }
+.btn-offline { background-color: #34495e; color: white; }
+.btn-pause { background-color: #3498db; color: white; flex: 1; }
+.btn-skip { background-color: #e67e22; color: white; flex: 2; }
+.btn-confirm { margin-top: 10px; background-color: var(--accent-color); color: white; }
+.btn-reveal { background-color: #ffffff; color: #000000; margin-top: 15px; display: none; }
+.btn-resolve { background-color: var(--text-color); color: black; display: none; margin-top: 15px; width: 100%; }
+.btn-secondary { display: none; margin-top: 20px; }
+
+/* INPUTS Y FORMULARIOS */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
 }
 
-/* ==========================================================================
-   3. SECCIÓN DE LA CARTA (EL HIT)
-   ========================================================================== */
-#card-section {
+input, select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: var(--input-bg);
+    color: white;
+    width: 100%;
+}
+
+.input-center {
+    text-align: center;
+}
+
+small {
+    color: var(--text-secondary);
+}
+
+/* SECCIONES Y PANELES */
+.player-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.game-section {
+    display: none; 
+    flex-direction: column;
     align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--text-secondary);
+    margin: 5px 0;
+}
+
+.divider span:not(.divider-text) {
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.divider-text {
+    padding: 0 10px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.turn-box {
+    background: #222;
+    width: 100%;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-left: 5px solid var(--accent-color);
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.betting-container {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 11px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+#bet-instruction {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.rivals-panel {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    display: none;
+}
+
+.rivals-title {
+    font-size: 0.9rem;
+    color: #ff0080;
+    font-weight: bold;
+}
+
+.rivals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* CARTA SECCIÓN */
+#card-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .card {
     background-color: var(--card-bg);
-    border: 2px solid #333;
+    border: 2px solid var(--border-color);
     border-radius: 15px;
     width: 200px;
     height: 280px;
@@ -146,9 +258,14 @@ button:hover {
     font-size: 1.1rem;
 }
 
-/* ==========================================================================
-   4. LÍNEA DEL TIEMPO (CONTENEDOR HORIZONTAL)
-   ========================================================================== */
+/* TIMELINE */
+#teams-board {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
 #timeline-section {
     background-color: #1a1a1a;
     padding: 15px;
@@ -188,7 +305,6 @@ button:hover {
     flex-shrink: 0;
 }
 
-/* Control anti-desbordamiento para títulos largos en la línea temporal */
 .timeline-card .title {
     width: 100%;
     white-space: nowrap;
