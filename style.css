@@ -1,12 +1,12 @@
 :root {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --text-color: #ffffff;
-    --text-secondary: #b3b3b3;
-    --accent-color: #1db954;
-    --gradient-hidden: linear-gradient(135deg, #7928ca, #ff0080);
-    --border-color: #333333;
-    --input-bg: #222222;
+    --color-fondo: #121212;
+    --color-carta: #1e1e1e;
+    --color-texto: #ffffff;
+    --color-texto-secundario: #b3b3b3;
+    --color-acento: #1db954;
+    --gradiente-oculto: linear-gradient(135deg, #7928ca, #ff0080);
+    --color-borde: #333333;
+    --fondo-input: #222222;
 }
 
 * {
@@ -17,8 +17,8 @@
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -33,7 +33,7 @@ header {
 
 header h1 {
     font-size: 2rem;
-    color: var(--accent-color);
+    color: var(--color-acento);
     text-transform: uppercase;
     letter-spacing: 2px;
 }
@@ -48,7 +48,7 @@ main {
 
 /* BOTONES GENERALES */
 button {
-    background-color: var(--accent-color);
+    background-color: var(--color-acento);
     color: black;
     border: none;
     padding: 15px 25px;
@@ -67,15 +67,15 @@ button:hover {
 
 .btn-spotify { background-color: #1db954; color: white; }
 .btn-offline { background-color: #34495e; color: white; }
-.btn-pause { background-color: #3498db; color: white; flex: 1; }
-.btn-skip { background-color: #e67e22; color: white; flex: 2; }
-.btn-confirm { margin-top: 10px; background-color: var(--accent-color); color: white; }
-.btn-reveal { background-color: #ffffff; color: #000000; margin-top: 15px; display: none; }
-.btn-resolve { background-color: var(--text-color); color: black; display: none; margin-top: 15px; width: 100%; }
-.btn-secondary { display: none; margin-top: 20px; }
+.btn-pausa { background-color: #3498db; color: white; flex: 1; }
+.btn-pasar { background-color: #e67e22; color: white; flex: 2; }
+.btn-confirmar { margin-top: 10px; background-color: var(--color-acento); color: white; }
+.btn-revelar { background-color: #ffffff; color: #000000; margin-top: 15px; display: none; }
+.btn-resolver { background-color: var(--color-texto); color: black; display: none; margin-top: 15px; width: 100%; }
+.btn-secundario { display: none; margin-top: 20px; }
 
 /* INPUTS Y FORMULARIOS */
-.form-group {
+.grupo-formulario {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -86,21 +86,21 @@ input, select {
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #444;
-    background: var(--input-bg);
+    background: var(--fondo-input);
     color: white;
     width: 100%;
 }
 
-.input-center {
+.input-centro {
     text-align: center;
 }
 
 small {
-    color: var(--text-secondary);
+    color: var(--color-texto-secundario);
 }
 
 /* SECCIONES Y PANELES */
-.player-selection {
+.seleccion-modo {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -108,7 +108,7 @@ small {
     max-width: 400px;
 }
 
-.game-section {
+.seccion-juego {
     display: none; 
     flex-direction: column;
     align-items: center;
@@ -116,42 +116,23 @@ small {
     width: 100%;
 }
 
-.divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    color: var(--text-secondary);
-    margin: 5px 0;
-}
-
-.divider span:not(.divider-text) {
-    flex: 1;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.divider-text {
-    padding: 0 10px;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-}
-
-.turn-box {
+.caja-turno {
     background: #222;
     width: 100%;
     padding: 15px;
     border-radius: 10px;
     text-align: center;
     font-weight: bold;
-    border-left: 5px solid var(--accent-color);
+    border-left: 5px solid var(--color-acento);
 }
 
-.action-row {
+.fila-acciones {
     display: flex;
     gap: 10px;
     width: 100%;
 }
 
-.betting-container {
+.contenedor-apuestas {
     background: #1a1a1a;
     padding: 15px;
     border-radius: 11px;
@@ -161,31 +142,31 @@ small {
     gap: 10px;
 }
 
-.section-subtitle {
-    color: var(--text-secondary);
+.subtitulo-seccion {
+    color: var(--color-texto-secundario);
     text-transform: uppercase;
     font-size: 0.9rem;
 }
 
-#bet-instruction {
+#instruccion-apuesta {
     font-size: 0.9rem;
     margin-bottom: 5px;
 }
 
-.rivals-panel {
+.panel-rivales {
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--color-borde);
     display: none;
 }
 
-.rivals-title {
+.titulo-rivales {
     font-size: 0.9rem;
     color: #ff0080;
     font-weight: bold;
 }
 
-.rivals-container {
+.contenedor-rivales {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -193,16 +174,16 @@ small {
 }
 
 /* CARTA SECCIÓN */
-#card-section {
+#seccion-carta {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
 }
 
-.card {
-    background-color: var(--card-bg);
-    border: 2px solid var(--border-color);
+.carta {
+    background-color: var(--color-carta);
+    border: 2px solid var(--color-borde);
     border-radius: 15px;
     width: 200px;
     height: 280px;
@@ -216,23 +197,23 @@ small {
     transition: background 0.5s ease;
 }
 
-.card.hidden {
-    background: var(--gradient-hidden);
+.carta.oculta {
+    background: var(--gradiente-oculto);
     border: none;
 }
 
-.card.hidden #card-title,
-.card.hidden #card-artist,
-.card.hidden #card-year {
+.carta.oculta #titulo-carta,
+.carta.oculta #artista-carta,
+.carta.oculta #anio-carta {
     display: none;
 }
 
-.card.hidden::before {
+.carta.oculta::before {
     content: "❓";
     font-size: 4rem;
 }
 
-#card-title {
+#titulo-carta {
     font-size: 1.2rem;
     margin-bottom: 10px;
     width: 100%;
@@ -240,8 +221,8 @@ small {
     text-overflow: ellipsis;
 }
 
-#card-artist {
-    color: var(--text-secondary);
+#artista-carta {
+    color: var(--color-texto-secundario);
     font-size: 1rem;
     margin-bottom: 20px;
     width: 100%;
@@ -249,8 +230,8 @@ small {
     text-overflow: ellipsis;
 }
 
-#card-year {
-    background-color: var(--accent-color);
+#anio-carta {
+    background-color: var(--color-acento);
     color: black;
     font-weight: bold;
     padding: 5px 15px;
@@ -258,30 +239,15 @@ small {
     font-size: 1.1rem;
 }
 
-/* TIMELINE */
-#teams-board {
+/* TABLERO Y LÍNEA TEMPORAL */
+#tablero-equipos {
     display: flex;
     flex-direction: column;
     gap: 20px;
     width: 100%;
 }
 
-#timeline-section {
-    background-color: #1a1a1a;
-    padding: 15px;
-    border-radius: 15px;
-    border: 1px solid #2a2a2a;
-    width: 100%;
-}
-
-#timeline-section h3 {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    text-transform: uppercase;
-}
-
-.timeline-container {
+.contenedor-linea-tiempo {
     display: flex;
     gap: 10px;
     overflow-x: auto;
@@ -289,9 +255,9 @@ small {
     width: 100%;
 }
 
-.timeline-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--accent-color);
+.carta-linea-tiempo {
+    background-color: var(--color-carta);
+    border: 1px solid var(--color-acento);
     border-radius: 8px;
     width: 90px;
     height: 120px;
@@ -305,15 +271,15 @@ small {
     flex-shrink: 0;
 }
 
-.timeline-card .title {
+.carta-linea-tiempo .titulo {
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.timeline-card .year {
-    background-color: var(--accent-color);
+.carta-linea-tiempo .anio {
+    background-color: var(--color-acento);
     color: black;
     font-weight: bold;
     padding: 2px 6px;

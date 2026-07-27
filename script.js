@@ -17,101 +17,101 @@ let costoPasarCancion = 1;
 let apuestasRivales = {}; 
 let posicionElegidaActivo = null;
 
-// Reproductor HTML5 para modo offline
 const reproductorLocal = new Audio();
-
-// Variables de reproducción Web Playback SDK (Spotify)
 let spotifyPlayer = null;
 let spotifyDeviceId = null;
 
-// Elementos del DOM
-const btnPlay = document.getElementById('btn-play');
+// ELEMENTOS DOM
+const btnSpotify = document.getElementById('btn-spotify');
 const btnOffline = document.getElementById('btn-offline');
-const btnReveal = document.getElementById('btn-reveal');
-const btnSkip = document.getElementById('btn-skip');
-const btnTogglePause = document.getElementById('btn-toggle-pause');
-const btnStartGame = document.getElementById('btn-start-game');
-const btnResolveTurn = document.getElementById('btn-resolve-turn');
-const btnConfirmActive = document.getElementById('btn-confirm-active');
-const secretCard = document.getElementById('secret-card');
-const cardTitle = document.getElementById('card-title');
-const cardArtist = document.getElementById('card-artist');
-const cardYear = document.getElementById('card-year');
-const btnLogout = document.getElementById('btn-logout');
+const btnRevelar = document.getElementById('btn-revelar');
+const btnPasar = document.getElementById('btn-pasar');
+const btnPausa = document.getElementById('btn-pausa');
+const btnEmpezar = document.getElementById('btn-empezar');
+const btnResolverTurno = document.getElementById('btn-resolver-turno');
+const btnConfirmarActivo = document.getElementById('btn-confirmar-activo');
+const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 
-const setupSection = document.getElementById('setup-section');
-const gamePlaySection = document.getElementById('game-play-section');
-const turnIndicator = document.getElementById('turn-indicator');
-const skipCostSpan = document.getElementById('skip-cost');
-const selectPlacement = document.getElementById('select-placement');
-const rivalsBetPanel = document.getElementById('rivals-bet-panel');
-const rivalsButtonsContainer = document.getElementById('rivals-buttons-container');
-const teamsBoard = document.getElementById('teams-board');
-const activeTeamBetDiv = document.getElementById('active-team-bet');
-const phaseTitle = document.getElementById('phase-title');
+const cartaSecreta = document.getElementById('carta-secreta');
+const tituloCarta = document.getElementById('titulo-carta');
+const artistaCarta = document.getElementById('artista-carta');
+const anioCarta = document.getElementById('anio-carta');
 
-// Event Listeners Principales
-if (btnPlay) btnPlay.onclick = iniciarSesionSpotify;
+const seccionLogin = document.getElementById('seccion-login');
+const seccionInicio = document.getElementById('seccion-inicio');
+const seccionJuego = document.getElementById('seccion-juego');
+const indicadorTurno = document.getElementById('indicador-turno');
+const spanCostoPasar = document.getElementById('costo-pasar');
+const selectorPosicion = document.getElementById('selector-posicion');
+const panelApuestasRivales = document.getElementById('panel-apuestas-rivales');
+const contenedorBotonesRivales = document.getElementById('contenedor-botones-rivales');
+const tableroEquipos = document.getElementById('tablero-equipos');
+const apuestaEquipoActivo = document.getElementById('apuesta-equipo-activo');
+const tituloFase = document.getElementById('titulo-fase');
+const numEquiposInput = document.getElementById('num-equipos');
+const contenedorEntradasEquipos = document.getElementById('contenedor-entradas-equipos');
+
+// ESCUCHADORES DE EVENTOS
+if (btnSpotify) btnSpotify.onclick = iniciarSesionSpotify;
 if (btnOffline) btnOffline.onclick = iniciarJuegoOffline;
+if (btnCerrarSesion) btnCerrarSesion.onclick = cerrarSesion;
+if (numEquiposInput) numEquiposInput.oninput = generarFormularioEquipos;
 
-// Extrae el ID limpio tanto si se pega una URL completa como un ID directo
+btnPausa.onclick = alternarPausa;
+btnPasar.onclick = pasarCancion;
+btnConfirmarActivo.onclick = confirmarPosicionActiva;
+btnRevelar.onclick = revelarRespuesta;
+btnResolverTurno.onclick = resolverTurno;
+
 function extraerPlaylistId(input) {
     if (!input) return null;
     const urlLimpia = input.trim();
-    if (urlLimpia.includes('/playlist/')) {
-        const parteID = urlLimpia.split('/playlist/')[1];
-        return parteID.split('?')[0];
-    }
-    return urlLimpia;
+    return urlLimpia.includes('/playlist/') ? urlLimpia.split('/playlist/')[1].split('?')[0] : urlLimpia;
 }
 
 function mostrarPantallaLogin() {
-    if (btnLogout) btnLogout.style.display = 'none'; 
-    document.getElementById('player-section').style.display = 'flex';
-    setupSection.style.display = 'none';
-    gamePlaySection.style.display = 'none';
+    if (btnCerrarSesion) btnCerrarSesion.style.display = 'none'; 
+    seccionLogin.style.display = 'flex';
+    seccionInicio.style.display = 'none';
+    seccionJuego.style.display = 'none';
 }
 
 function iniciarJuegoOffline() {
     modoOffline = true;
-    cancionesJuego = CANCIONES_LOCALES.map(c => ({ ...c }));
+    cancionesJuego = [...CANCIONES_LOCALES];
+    seccionLogin.style.display = 'none';
     
-    document.getElementById('player-section').style.display = 'none';
-    
-    const playlistContainer = document.getElementById('playlist-input-container');
-    if (playlistContainer) playlistContainer.style.display = 'none';
+    const contenedorPlaylist = document.getElementById('contenedor-playlist');
+    if (contenedorPlaylist) contenedorPlaylist.style.display = 'none';
 
-    setupSection.style.display = 'flex';
+    seccionInicio.style.display = 'flex';
     generarFormularioEquipos();
 }
 
 function iniciarJuego() {
     modoOffline = false;
-    if (btnLogout) btnLogout.style.display = 'block'; 
-    document.getElementById('player-section').style.display = 'none';
+    if (btnCerrarSesion) btnCerrarSesion.style.display = 'block'; 
+    seccionLogin.style.display = 'none';
     
     inicializarReproductorSpotify();
 
-    const playlistContainer = document.getElementById('playlist-input-container');
-    if (playlistContainer) playlistContainer.style.display = 'flex';
+    const contenedorPlaylist = document.getElementById('contenedor-playlist');
+    if (contenedorPlaylist) contenedorPlaylist.style.display = 'flex';
 
-    setupSection.style.display = 'flex';
+    seccionInicio.style.display = 'flex';
     generarFormularioEquipos();
 }
 
 function cerrarSesion() {
     localStorage.clear();
-    
-    const logoutUrl = 'https://www.spotify.com/logout/';
-    const spotifyWindow = window.open(logoutUrl, '_blank', 'width=700,height=500');
-    
+    const spotifyWindow = window.open('https://www.spotify.com/logout/', '_blank', 'width=700,height=500');
     setTimeout(() => {
         if (spotifyWindow) spotifyWindow.close();
         window.location.href = window.location.origin + window.location.pathname;
     }, 2000);
 }
 
-// CONFIGURACIÓN DEL REPRODUCTOR WEB DE SPOTIFY (SDK)
+// REPRODUCTOR SPOTIFY
 window.onSpotifyWebPlaybackSDKReady = () => {};
 
 function inicializarReproductorSpotify() {
@@ -119,17 +119,13 @@ function inicializarReproductorSpotify() {
 
     spotifyPlayer = new Spotify.Player({
         name: 'Hitster Web Player',
-        getOAuthToken: cb => { cb(accessToken); },
+        getOAuthToken: cb => cb(accessToken),
         volume: 0.8
     });
 
-    spotifyPlayer.addListener('ready', ({ device_id }) => {
-        spotifyDeviceId = device_id;
-    });
-
+    spotifyPlayer.addListener('ready', ({ device_id }) => { spotifyDeviceId = device_id; });
     spotifyPlayer.addListener('player_state_changed', state => {
-        if (!state) return;
-        btnTogglePause.textContent = state.paused ? "Reanudar" : "Pausar";
+        if (state) btnPausa.textContent = state.paused ? "Reanudar" : "Pausar";
     });
 
     spotifyPlayer.connect();
@@ -139,9 +135,7 @@ async function reproducirCancion(cancion) {
     if (modoOffline) {
         reproductorLocal.src = cancion.audioUrl;
         reproductorLocal.play().catch(e => console.error("Error al reproducir audio local:", e));
-    } else {
-        if (!spotifyDeviceId || !accessToken) return;
-
+    } else if (spotifyDeviceId && accessToken) {
         await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${spotifyDeviceId}`, {
             method: 'PUT',
             body: JSON.stringify({ uris: [cancion.spotifyUri] }),
@@ -154,42 +148,28 @@ async function reproducirCancion(cancion) {
 }
 
 function pausarAudio() {
-    if (modoOffline) {
-        reproductorLocal.pause();
-    } else if (spotifyPlayer) {
-        spotifyPlayer.pause();
-    }
+    modoOffline ? reproductorLocal.pause() : spotifyPlayer?.pause();
 }
 
 function alternarPausa() {
     if (modoOffline) {
-        if (reproductorLocal.paused) {
-            reproductorLocal.play();
-            btnTogglePause.textContent = "Pausar";
-        } else {
-            reproductorLocal.pause();
-            btnTogglePause.textContent = "Reanudar";
-        }
-    } else if (spotifyPlayer) {
-        spotifyPlayer.togglePlay();
+        reproductorLocal.paused ? reproductorLocal.play() : reproductorLocal.pause();
+        btnPausa.textContent = reproductorLocal.paused ? "Reanudar" : "Pausar";
+    } else {
+        spotifyPlayer?.togglePlay();
     }
 }
 
 // AUTENTICACIÓN PKCE SPOTIFY
 function generarCadenaAleatoria(longitud) {
     const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-    let resultado = '';
     const valoresAleatorios = new Uint8Array(longitud);
     window.crypto.getRandomValues(valoresAleatorios);
-    for (let i = 0; i < longitud; i++) {
-        resultado += caracteres[valoresAleatorios[i] % caracteres.length];
-    }
-    return resultado;
+    return Array.from(valoresAleatorios, v => caracteres[v % caracteres.length]).join('');
 }
 
 async function generarCodeChallenge(codeVerifier) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(codeVerifier);
+    const data = new TextEncoder().encode(codeVerifier);
     const digest = await window.crypto.subtle.digest('SHA-256', data);
     return btoa(String.fromCharCode(...new Uint8Array(digest)))
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -222,33 +202,24 @@ async function iniciarSesionSpotify() {
     localStorage.setItem('pkce_code_verifier', codeVerifier);
 
     const urlLogin = `https://accounts.spotify.com/authorize?` + 
-        `client_id=${CLIENT_ID}` +
-        `&response_type=code` +
+        `client_id=${CLIENT_ID}&response_type=code` +
         `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
         `&scope=${encodeURIComponent(SCOPES)}` +
-        `&code_challenge_method=S256` +
-        `&code_challenge=${codeChallenge}` +
-        `&show_dialog=true`;
+        `&code_challenge_method=S256&code_challenge=${codeChallenge}&show_dialog=true`;
         
     window.location.href = urlLogin;
 }
 
 async function intercambiarCodigoPorToken(code) {
     const codeVerifier = localStorage.getItem('pkce_code_verifier');
-    const url = 'https://accounts.spotify.com/api/token';
-    const cuerpo = new URLSearchParams({
-        client_id: CLIENT_ID,
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: REDIRECT_URI,
-        code_verifier: codeVerifier
-    });
-
     try {
-        const respuesta = await fetch(url, {
+        const respuesta = await fetch('https://accounts.spotify.com/api/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: cuerpo.toString()
+            body: new URLSearchParams({
+                client_id: CLIENT_ID, grant_type: 'authorization_code',
+                code, redirect_uri: REDIRECT_URI, code_verifier: codeVerifier
+            })
         });
 
         if (!respuesta.ok) throw new Error("Error en autenticación");
@@ -266,14 +237,15 @@ async function intercambiarCodigoPorToken(code) {
 }
 
 async function obtenerCancionesSpotify(idPlaylist) {
-    const url = `https://api.spotify.com/v1/playlists/${idPlaylist}/tracks?fields=items(track(name,uri,artists,album(release_date)))`;
     try {
-        const respuesta = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const respuesta = await fetch(`https://api.spotify.com/v1/playlists/${idPlaylist}/tracks?fields=items(track(name,uri,artists,album(release_date)))`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
         if (!respuesta.ok) throw new Error("Error obteniendo playlist");
         
         const datos = await respuesta.json();
         const cancionesFiltradas = datos.items
-            .filter(item => item.track && item.track.album && item.track.album.release_date)
+            .filter(item => item.track?.album?.release_date)
             .map(item => ({
                 titulo: item.track.name,
                 artista: item.track.artists[0].name,
@@ -281,91 +253,66 @@ async function obtenerCancionesSpotify(idPlaylist) {
                 spotifyUri: item.track.uri
             }));
 
-        if (cancionesFiltradas.length === 0) {
+        if (!cancionesFiltradas.length) {
             alert("La playlist no contiene canciones válidas.");
             return false;
         }
 
         cancionesJuego = cancionesFiltradas;
         return true;
-
     } catch (error) {
-        console.error("Error al cargar Spotify:", error);
         alert(`Error de Spotify: ${error.message}`);
         return false;
     }
 }
 
-// FORMULARIO Y LÓGICA DEL JUEGO
-document.getElementById('num-teams').addEventListener('input', generarFormularioEquipos);
-
+// FORMULARIO Y CONFIGURACIÓN
 function generarFormularioEquipos() {
-    const contenedor = document.getElementById('teams-input-container');
-    const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
-    contenedor.innerHTML = '';
+    const totalEquipos = parseInt(numEquiposInput.value) || 2;
+    contenedorEntradasEquipos.innerHTML = '';
 
     for (let i = 1; i <= totalEquipos; i++) {
         const divEquipo = document.createElement('div');
-        divEquipo.style.cssText = "display: flex; flex-direction: column; gap: 5px; background: #222; padding: 10px; border-radius: 5px;";
+        divEquipo.className = 'grupo-formulario';
+        divEquipo.style.cssText = "background: #222; padding: 10px; border-radius: 5px;";
         divEquipo.innerHTML = `
-            <strong style="color: var(--accent-color, #1db954);">Equipo ${i}</strong>
-            <input type="text" id="name-team-${i}" value="Equipo ${i}" placeholder="Nombre del Equipo" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
-            <input type="number" id="year-team-${i}" value="${1990 + (i * 5)}" placeholder="Año de su primera canción" style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
+            <strong style="color: var(--color-acento, #1db954);">Equipo ${i}</strong>
+            <input type="text" id="nombre-equipo-${i}" value="Equipo ${i}" placeholder="Nombre del Equipo">
+            <input type="number" id="anio-equipo-${i}" value="${1990 + (i * 5)}" placeholder="Año inicial">
         `;
-        contenedor.appendChild(divEquipo);
+        contenedorEntradasEquipos.appendChild(divEquipo);
     }
 }
 
-btnStartGame.addEventListener('click', async () => {
-    const totalEquipos = parseInt(document.getElementById('num-teams').value) || 2;
-    
-    if (document.getElementById('teams-input-container').children.length === 0) {
-        generarFormularioEquipos();
-        return; 
-    }
+btnEmpezar.addEventListener('click', async () => {
+    const totalEquipos = parseInt(numEquiposInput.value) || 2;
 
     if (!modoOffline) {
-        const inputPlaylist = document.getElementById('playlist-url').value;
+        const inputPlaylist = document.getElementById('url-playlist').value;
         const idExtraido = extraerPlaylistId(inputPlaylist);
         
-        if (!idExtraido) {
-            alert("Por favor, introduce una URL o ID de playlist válida.");
-            return;
-        }
-
-        playlistIdActual = idExtraido;
-        const exito = await obtenerCancionesSpotify(playlistIdActual);
-        
-        if (!exito) {
-            alert("No se pudo cargar la playlist. Verifica que sea pública y que la URL sea correcta.");
+        if (!idExtraido || !(await obtenerCancionesSpotify(idExtraido))) {
+            alert("Verifica la URL o ID de la playlist.");
             return;
         }
     }
 
-    equipos = [];
-    
-    for(let i = 1; i <= totalEquipos; i++) {
-        const nombreInput = document.getElementById(`name-team-${i}`).value.trim() || `Equipo ${i}`;
-        const anioInput = parseInt(document.getElementById(`year-team-${i}`).value) || 2000;
-
-        const cartaInicialPersonalizada = {
-            titulo: "Año Inicial",
-            artista: "Elección del equipo",
-            anio: anioInput,
-            spotifyUri: null,
-            audioUrl: null
-        };
-
-        equipos.push({
+    equipos = Array.from({ length: totalEquipos }, (_, index) => {
+        const i = index + 1;
+        return {
             id: i,
-            nombre: nombreInput,
+            nombre: document.getElementById(`nombre-equipo-${i}`).value.trim() || `Equipo ${i}`,
             fichas: 5,
-            lineaTiempo: [cartaInicialPersonalizada] 
-        });
-    }
+            lineaTiempo: [{
+                titulo: "Año Inicial",
+                artista: "Elección del equipo",
+                anio: parseInt(document.getElementById(`anio-equipo-${i}`).value) || 2000
+            }]
+        };
+    });
 
-    setupSection.style.display = 'none';
-    gamePlaySection.style.display = 'flex';
+    seccionInicio.style.display = 'none';
+    seccionJuego.style.display = 'flex';
 
     actualizarTableroVisual();
     nuevoTurno();
@@ -374,48 +321,44 @@ btnStartGame.addEventListener('click', async () => {
 function modificarFichas(equipoId, cantidad) {
     const eq = equipos.find(e => e.id === equipoId);
     if (eq) {
-        eq.fichas += cantidad;
-        if (eq.fichas < 0) eq.fichas = 0;
+        eq.fichas = Math.max(0, eq.fichas + cantidad);
         actualizarTableroVisual();
     }
 }
 
 function actualizarTableroVisual() {
-    teamsBoard.innerHTML = '';
+    tableroEquipos.innerHTML = '';
     equipos.forEach((eq, index) => {
+        const esTurnoActual = index === turnoActual;
         const contenedorEq = document.createElement('div');
-        contenedorEq.style.cssText = `background: #1e1e1e; padding: 15px; border-radius: 10px; border: 2px solid ${index === turnoActual ? 'var(--accent-color, #1db954)' : '#333'}`;
+        contenedorEq.style.cssText = `background: #1e1e1e; padding: 15px; border-radius: 10px; border: 2px solid ${esTurnoActual ? 'var(--color-acento, #1db954)' : '#333'}`;
         
         contenedorEq.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; font-weight:bold;">
-                <span style="color: ${index === turnoActual ? 'var(--accent-color, #1db954)' : 'white'}">${eq.nombre} ${index === turnoActual ? '(Jugando)' : ''}</span>
+            <div style="display:flex; justify-space-between; align-items:center; margin-bottom: 10px; font-weight:bold;">
+                <span style="color: ${esTurnoActual ? 'var(--color-acento)' : 'white'}">${eq.nombre} ${esTurnoActual ? '(Jugando)' : ''}</span>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="color: #e67e22; margin-right:5px;">🪙 Fichas: <span id="fichas-val-${eq.id}">${eq.fichas}</span></span>
+                    <span style="color: #e67e22;">🪙 Fichas: ${eq.fichas}</span>
                     <button onclick="modificarFichas(${eq.id}, 1)" style="padding:2px 8px; width:auto; background:#2ecc71; font-size:0.8rem;">+1</button>
                     <button onclick="modificarFichas(${eq.id}, -1)" style="padding:2px 8px; width:auto; background:#e74c3c; font-size:0.8rem;">-1</button>
                 </div>
             </div>
-            <div class="timeline-container" id="tl-eq-${eq.id}"></div>
+            <div class="contenedor-linea-tiempo" id="tl-eq-${eq.id}"></div>
         `;
         
-        teamsBoard.appendChild(contenedorEq);
+        tableroEquipos.appendChild(contenedorEq);
         const tlContenedor = document.getElementById(`tl-eq-${eq.id}`);
         
         eq.lineaTiempo.sort((a,b) => a.anio - b.anio).forEach(cancion => {
             const miniCarta = document.createElement('div');
-            miniCarta.classList.add('timeline-card');
+            miniCarta.className = 'carta-linea-tiempo';
             
             if (!cancion.spotifyUri && !cancion.audioUrl) {
-                miniCarta.innerHTML = `
-                    <div class="year" style="font-size: 1.8rem; font-weight: bold; color: #ffffff; background: #2a2a2a; padding: 15px 10px; border-radius: 6px; text-align: center; width: 100%; max-width: 100%; box-sizing: border-box; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin: 0 auto; display: block;">
-                        ${cancion.anio}
-                    </div>
-                `;
+                miniCarta.innerHTML = `<div class="anio" style="font-size: 1.5rem; color: #fff; background: #2a2a2a; padding: 10px; width: 100%; border-radius: 6px;">${cancion.anio}</div>`;
             } else {
                 miniCarta.innerHTML = `
-                    <div class="artist">${cancion.artista}</div>
-                    <div class="title" title="${cancion.titulo}">${cancion.titulo}</div>
-                    <div class="year">${cancion.anio}</div>
+                    <div style="color: var(--color-texto-secundario);">${cancion.artista}</div>
+                    <div class="titulo" title="${cancion.titulo}">${cancion.titulo}</div>
+                    <div class="anio">${cancion.anio}</div>
                 `;
             }
             tlContenedor.appendChild(miniCarta);
@@ -424,7 +367,7 @@ function actualizarTableroVisual() {
 }
 
 function nuevoTurno() {
-    if (cancionesJuego.length === 0) {
+    if (!cancionesJuego.length) {
         alert("¡Se han acabado las canciones disponibles!");
         return;
     }
@@ -432,194 +375,145 @@ function nuevoTurno() {
     apuestasRivales = {};
     posicionElegidaActivo = null;
     
-    phaseTitle.textContent = "Fase de Colocación";
-    activeTeamBetDiv.style.display = 'block';
-    selectPlacement.disabled = false;
-    btnConfirmActive.style.display = 'block';
+    tituloFase.textContent = "Fase de Colocación";
+    apuestaEquipoActivo.style.display = 'block';
+    selectorPosicion.disabled = false;
+    btnConfirmarActivo.style.display = 'block';
     
-    rivalsBetPanel.style.display = 'none';
-    btnResolveTurn.style.display = 'none';
-    btnReveal.style.display = 'none';
-    btnSkip.style.display = 'block';
-    btnTogglePause.style.display = 'block';
-    btnTogglePause.textContent = "Pausar";
-    secretCard.classList.add('hidden');
+    panelApuestasRivales.style.display = 'none';
+    btnResolverTurno.style.display = 'none';
+    btnRevelar.style.display = 'none';
+    btnPasar.style.display = 'block';
+    btnPausa.style.display = 'block';
+    btnPausa.textContent = "Pausar";
+    cartaSecreta.classList.add('oculta');
     
-    skipCostSpan.textContent = costoPasarCancion;
-    turnIndicator.textContent = `Turno activo: ${equipos[turnoActual].nombre}`;
+    spanCostoPasar.textContent = costoPasarCancion;
+    indicadorTurno.textContent = `Turno activo: ${equipos[turnoActual].nombre}`;
     
-    const indiceAleatorio = Math.floor(Math.random() * cancionesJuego.length);
-    cancionActual = cancionesJuego.splice(indiceAleatorio, 1)[0];
+    cancionActual = cancionesJuego.splice(Math.floor(Math.random() * cancionesJuego.length), 1)[0];
 
-    cardTitle.textContent = cancionActual.titulo;
-    cardArtist.textContent = cancionActual.artista;
-    cardYear.textContent = cancionActual.anio;
+    tituloCarta.textContent = cancionActual.titulo;
+    artistaCarta.textContent = cancionActual.artista;
+    anioCarta.textContent = cancionActual.anio;
 
     reproducirCancion(cancionActual);
-    
     prepararSelectorEspacios();
     actualizarTableroVisual();
 }
 
 function prepararSelectorEspacios() {
-    selectPlacement.innerHTML = '';
-    
+    selectorPosicion.innerHTML = '';
     const lt = equipos[turnoActual].lineaTiempo.sort((a, b) => a.anio - b.anio);
-    
-    if (lt.length === 0) return;
 
-    if (lt.length === 1) {
-        const opAntes = document.createElement('option');
-        opAntes.value = "0";
-        opAntes.textContent = `Antes de ${lt[0].anio}`;
-        selectPlacement.appendChild(opAntes);
-
-        const opDespues = document.createElement('option');
-        opDespues.value = "1";
-        opDespues.textContent = `Después de ${lt[0].anio}`;
-        selectPlacement.appendChild(opDespues);
-        return;
-    }
-
-    const opAntes = document.createElement('option');
-    opAntes.value = "0";
-    opAntes.textContent = `Antes de ${lt[0].anio}`;
-    selectPlacement.appendChild(opAntes);
-
+    selectorPosicion.add(new Option(`Antes de ${lt[0].anio}`, "0"));
     for (let i = 0; i < lt.length - 1; i++) {
-        const opEntre = document.createElement('option');
-        opEntre.value = `${i + 1}`;
-        opEntre.textContent = `Entre ${lt[i].anio} y ${lt[i + 1].anio}`;
-        selectPlacement.appendChild(opEntre);
+        selectorPosicion.add(new Option(`Entre ${lt[i].anio} y ${lt[i + 1].anio}`, `${i + 1}`));
     }
-
-    const opDespues = document.createElement('option');
-    opDespues.value = `${lt.length}`;
-    opDespues.textContent = `Después de ${lt[lt.length - 1].anio}`;
-    selectPlacement.appendChild(opDespues);
+    if (lt.length >= 1) {
+        selectorPosicion.add(new Option(`Después de ${lt[lt.length - 1].anio}`, `${lt.length}`));
+    }
 }
 
-// CONTROLADORES DE REPRODUCCIÓN
-btnTogglePause.addEventListener('click', alternarPausa);
-
-btnSkip.addEventListener('click', () => {
+function pasarCancion() {
     const eq = equipos[turnoActual];
     if (eq.fichas < costoPasarCancion) return;
-    eq.fichas -= costoPasarCancion;
-    costoPasarCancion++; 
+    eq.fichas -= costoPasarCancion++;
     pausarAudio();
     nuevoTurno();
-});
+}
 
-btnConfirmActive.addEventListener('click', () => {
-    posicionElegidaActivo = parseInt(selectPlacement.value);
-    selectPlacement.disabled = true;
-    btnConfirmActive.style.display = 'none';
-    btnSkip.style.display = 'none';
-    btnTogglePause.style.display = 'none';
+function confirmarPosicionActiva() {
+    posicionElegidaActivo = parseInt(selectorPosicion.value);
+    selectorPosicion.disabled = true;
+    btnConfirmarActivo.style.display = 'none';
+    btnPasar.style.display = 'none';
+    btnPausa.style.display = 'none';
     
-    phaseTitle.textContent = "Turno de Robo de los Rivales";
-    rivalsButtonsContainer.innerHTML = '';
+    tituloFase.textContent = "Turno de Robo de los Rivales";
+    contenedorBotonesRivales.innerHTML = '';
 
     equipos.forEach((eq, index) => {
-        if(index !== turnoActual && eq.fichas > 0) {
+        if (index !== turnoActual && eq.fichas > 0) {
             const divRival = document.createElement('div');
-            divRival.style.cssText = "display:flex; gap:10px; align-items:center; background:#252525; padding:8px; border-radius:5px; margin-bottom:5px;";
+            divRival.style.cssText = "display:flex; gap:10px; align-items:center; background:#252525; padding:8px; border-radius:5px;";
             
             const selRival = document.createElement('select');
-            selRival.id = `select-rival-${eq.id}`;
-            selRival.style.cssText = "padding:5px; background:#444; color:white; border:none; border-radius:3px; flex-grow:1;";
-            
-            Array.from(selectPlacement.options).forEach(opt => {
+            Array.from(selectorPosicion.options).forEach(opt => {
                 if (parseInt(opt.value) !== posicionElegidaActivo) {
-                    const clone = opt.cloneNode(true);
-                    selRival.appendChild(clone);
+                    selRival.appendChild(opt.cloneNode(true));
                 }
             });
 
-            divRival.innerHTML = `<span style="font-size:0.9rem; min-width:80px;">${eq.nombre}:</span>`;
-            
             const btnRobar = document.createElement('button');
             btnRobar.textContent = "Apostar Robo";
-            btnRobar.style.cssText = "padding:5px 10px; font-size:0.8rem; width:auto; background:#ff0080; color:white; border:none; border-radius:3px;";
+            btnRobar.style.cssText = "padding:5px 10px; font-size:0.8rem; width:auto; background:#ff0080; color:white;";
             
             btnRobar.onclick = () => {
                 apuestasRivales[eq.id] = parseInt(selRival.value);
                 btnRobar.textContent = "Fijado";
                 btnRobar.style.background = "#555";
-                btnRobar.disabled = true;
-                selRival.disabled = true;
+                btnRobar.disabled = selRival.disabled = true;
             };
 
-            divRival.appendChild(selRival);
-            divRival.appendChild(btnRobar);
-            rivalsButtonsContainer.appendChild(divRival);
+            divRival.append(`${eq.nombre}: `, selRival, btnRobar);
+            contenedorBotonesRivales.appendChild(divRival);
         }
     });
 
-    rivalsBetPanel.style.display = 'block';
-    btnReveal.style.display = 'block'; 
-});
+    panelApuestasRivales.style.display = 'block';
+    btnRevelar.style.display = 'block';
+}
 
-btnReveal.addEventListener('click', () => {
+function revelarRespuesta() {
     pausarAudio();
-    secretCard.classList.remove('hidden');
-    btnReveal.style.display = 'none';
-    rivalsBetPanel.style.display = 'none';
-    activeTeamBetDiv.style.display = 'none';
+    cartaSecreta.classList.remove('oculta');
+    btnRevelar.style.display = 'none';
+    panelApuestasRivales.style.display = 'none';
+    apuestaEquipoActivo.style.display = 'none';
     
-    phaseTitle.textContent = "Resultados del Turno";
+    tituloFase.textContent = "Resultados del Turno";
     
     const eqActivo = equipos[turnoActual];
-    let copiaLinea = [...eqActivo.lineaTiempo];
-    copiaLinea.push(cancionActual);
-    copiaLinea.sort((a,b) => a.anio - b.anio);
+    let copiaLinea = [...eqActivo.lineaTiempo, cancionActual].sort((a,b) => a.anio - b.anio);
     const indiceCorrectoReal = copiaLinea.indexOf(cancionActual);
     
-    let activoHaAcertado = esPosicionCorrecta(posicionElegidaActivo, eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
     let cartaEntregada = false;
 
-    if (activoHaAcertado) {
+    if (esPosicionCorrecta(posicionElegidaActivo, eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal)) {
         eqActivo.lineaTiempo.push(cancionActual);
         eqActivo.lineaTiempo.sort((a, b) => a.anio - b.anio); 
         cartaEntregada = true; 
     }
 
     equipos.forEach(eq => {
-        if(apuestasRivales[eq.id] !== undefined) {
-            let rivalHaAcertado = esPosicionCorrecta(apuestasRivales[eq.id], eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal);
-            
-            if(rivalHaAcertado) {
+        if (apuestasRivales[eq.id] !== undefined) {
+            if (esPosicionCorrecta(apuestasRivales[eq.id], eqActivo.lineaTiempo, cancionActual, indiceCorrectoReal)) {
                 if (!cartaEntregada) {
                     eq.lineaTiempo.push(cancionActual);
                     eq.lineaTiempo.sort((a, b) => a.anio - b.anio);
                     cartaEntregada = true; 
                 }
             } else {
-                eq.fichas -= 1;
+                eq.fichas--;
             }
         }
     });
 
     actualizarTableroVisual();
-    btnResolveTurn.style.display = 'block';
-});
+    btnResolverTurno.style.display = 'block';
+}
 
 function esPosicionCorrecta(opcionElegida, lineaDeTiempo, nuevaCancion, indiceReal) {
     if (opcionElegida === indiceReal) return true;
-
-    const cartaIzquierda = lineaDeTiempo[opcionElegida - 1];
-    const cartaDerecha = lineaDeTiempo[opcionElegida];
-    
-    if (cartaIzquierda && cartaIzquierda.anio === nuevaCancion.anio) return true;
-    if (cartaDerecha && cartaDerecha.anio === nuevaCancion.anio) return true;
-    
-    return false;
+    const cIzq = lineaDeTiempo[opcionElegida - 1];
+    const cDer = lineaDeTiempo[opcionElegida];
+    return (cIzq && cIzq.anio === nuevaCancion.anio) || (cDer && cDer.anio === nuevaCancion.anio);
 }
 
-btnResolveTurn.addEventListener('click', () => {
+function resolverTurno() {
     const ganador = equipos.find(e => e.lineaTiempo.length >= 10);
-    if(ganador) {
+    if (ganador) {
         alert(`¡Felicidades! ${ganador.nombre} ha ganado la partida.`);
         window.location.reload();
         return;
@@ -628,10 +522,6 @@ btnResolveTurn.addEventListener('click', () => {
     turnoActual = (turnoActual + 1) % equipos.length;
     costoPasarCancion = 1; 
     nuevoTurno();
-});
-
-if (btnLogout) {
-    btnLogout.addEventListener('click', cerrarSesion);
 }
 
 verificarToken();
